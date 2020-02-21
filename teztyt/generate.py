@@ -11,7 +11,6 @@ from os.path import join, isfile, isdir
 from os import listdir, unlink
 import shutil
 
-from PyPDF2 import PdfFileMerger
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
 
 
@@ -311,14 +310,6 @@ class OneClassMultipleChoiceTest:
             in_dir (str or unicode): Path to the input directory containing the PDF files to be merged.
             out_file (str or unicode): Path to the merged PDF.
         """
-#         pm = PdfFileMerger()
-#         
-#         for f in sorted(listdir(in_dir)):
-#             if isfile(join(in_dir, f)) and regex.match('^{}.*\.pdf$'.format(self.config['out_file_prefix']), f, flags=regex.IGNORECASE):
-#                 pm.append(join(in_dir, f))
-#         
-#         pm.write(out_file)
-        
         pw = PdfFileWriter()
         
         for f in sorted(listdir(in_dir)):
