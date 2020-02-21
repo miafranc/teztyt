@@ -1,0 +1,29 @@
+{
+	"title": "{\\fontsize{20}{22}\\selectfont\\textbf{Formális nyelvek és fordítóprogramok}}",
+	"subtitle": "2020.02.20.",
+	"correct_key_match": "^a.*",
+	"pagenumbering": "gobble",
+	"points_format_string": "{}p",
+	"itemsep": "0pt",
+	"baselinestretch": 1.2,
+	"prologue": [
+		"\\documentclass[9pt,oneside,twocolumn]{extarticle}",
+        "\\usepackage[magyar]{babel}",
+        "\\usepackage[utf8]{inputenc}",
+        "\\usepackage[truedimen, a4paper, left=12mm, right=12mm, top=5mm, bottom=15mm, centering, ignoreheadfoot]{geometry}",
+        "\\usepackage[center]{crop}",
+        "\\usepackage{../data/def}"
+	],
+	"name_and_stuff": "{\\fontsize{13}{14}\\selectfont Név:\\hfill~Csoport:\\hfill~}",
+	"newtheorem_string": "feladat",
+	"problem_environment": "problem",
+	"checkbox": "$\\Box$",
+	"out_file_prefix": "test",
+	"solutions_file": "solutions.txt",
+	"pdflatex": "pdflatex",
+	"latex_parameters": "-interaction=batchmode",
+	"max_pages": 1,
+	"same_page_number": false,
+	"max_attempts": 10,
+	"figures_dir": "/home/miafranc/git/testy/testy/test/data/fig"
+}
