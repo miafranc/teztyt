@@ -342,9 +342,12 @@ class OneClassMultipleChoiceTest:
 
 
 if __name__ == "__main__":
-    # MEGOLDANI:
+    # TODO:
     # ----------
-    # requirements.txt
+    # - API: generate given test (i.e. given the problems)
+    # - command line interface
+    # - requirements.txt
+    # - README.md
     
     mct = OneClassMultipleChoiceTest('config.json')
     
