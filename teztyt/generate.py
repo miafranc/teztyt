@@ -127,7 +127,7 @@ class OneClassMultipleChoiceTest:
             for k in sel_keys:
                 problem_num += 1
                 answers = self._shuffle_answers(self.data[i][k])
-                code = self._generate_code(problem_num, i, k, answers)
+                code = self._generate_code(test_id, problem_num, i, k, answers)
                 sol = self._generate_solution(problem_num, i, k, answers)
                 test_code += code
                 test_solution += sol
@@ -144,10 +144,11 @@ class OneClassMultipleChoiceTest:
         
         return (test_code, test_solution)
 
-    def _generate_code(self, problem_num, i, k, answers):
+    def _generate_code(self, test_id, problem_num, i, k, answers):
         """Generates LaTeX code for a given test problem.
         
         Parameters:
+            test_id (int): Unique ID (usually index) of test. 
             problem_num (int): Index of problem.
             i (int): Index of data file.
             k (str or unicode): Key of the problem.
@@ -162,9 +163,10 @@ class OneClassMultipleChoiceTest:
         code += u'\\begin{itemize}\n'
         code += u'\\setlength{{\\itemsep}}{{{}}}\n'.format(self.config['itemsep'])
         
-        for a in answers:
+        for ind_a, a in enumerate(answers):
             ans = self.data[i][k]['A'][a].replace('%figures_dir%', self.config['figures_dir'])
-            code += u'\\item[{}] {}'.format(self.config['checkbox'], ans)
+#             code += u'\\item[{}] {}'.format(self.config['checkbox'], ans)
+            code += u'\\item[\\checkBoxHref{{{}}}] {}'.format(u'{}:{}:{}:{}'.format(test_id, i, k, ind_a), ans)
             code += u' %\n' if regex.match(self.config['correct_key_match'], a) else u'\n'
          
         code += u'\\end{itemize}\n'
@@ -189,15 +191,27 @@ class OneClassMultipleChoiceTest:
         if self.config['subtitle'] != '':
             prologue += u'{}\\\\\n'.format(self.config['subtitle'])
         prologue += u'{}\\\\\n'.format(test_id)
+        prologue += u'}'
         
-        prologue += self.config['name_and_stuff'] + u'}\n\n'
-
         prologue += u'\n\\date{}\\author{}\n\n'
+        
+        prologue += u'\\usepackage{hyperref}\n'
+        prologue += u'\\newcommand\\checkBoxHref[1]{\\mbox{\\CheckBox[width=3mm, height=3mm, checkboxsymbol=\\ding{110}, bordercolor=0 0 0]{#1}}}\n'
+        prologue += u'\\renewcommand\\LayoutCheckField[2]{#2}\n\n'
 
         prologue += u'\\pagenumbering{{{}}}\n'.format(self.config['pagenumbering'])
         prologue += u'\\newcounter{{fel}}\n\\newtheorem{{problem}}[fel]{{{}}}\n'.format(self.config['newtheorem_string'])  # "built-in"/default problem environment
-        prologue += u'\\renewcommand{{\\baselinestretch}}{{{}}}\n'.format(self.config['baselinestretch'])
-        prologue += u'\\begin{document}\n\\maketitle\\sloppy\n\n'
+        prologue += u'\\renewcommand{{\\baselinestretch}}{{{}}}\n\n'.format(self.config['baselinestretch'])
+        prologue += u'\\begin{document}\n\n\\maketitle\\sloppy\n\n'
+        
+#         prologue += u'\\begin{Form}[action={}]\n\n'
+        prologue += u'\\begin{Form}\n\n'
+
+        for ind_f, field in enumerate(self.config['name_and_stuff']):
+            prologue += u'\\noindent\\TextField[name={},width={}]{{{}:}}{}\n'.format(u't{}:{}'.format(test_id, ind_f), 
+                                                                                     self.config['name_and_stuff_widths'][ind_f], 
+                                                                                     field,
+                                                                                     u'\\\\\\\\' if ind_f < len(self.config['name_and_stuff']) -1 else u'')
         
 #         print prologue
     
@@ -209,7 +223,8 @@ class OneClassMultipleChoiceTest:
         Returns:
             unicode: The LaTeX code epilogue.
         """
-        epilogue = u'\n\\end{document}'
+        epilogue = u'\n\\end{Form}\n\n'
+        epilogue += u'\n\\end{document}'
         return epilogue
     
     def _generate_solution(self, problem_num, i, k, answers):
@@ -337,7 +352,8 @@ if __name__ == "__main__":
              'data_OK/t2.json',
              'data_OK/t3.json')
       
-    mct.generate_tests(5, 'gen', 2, 4, 2)
+#     mct.generate_tests(1, 'gen', 1, 1, 1)
+    mct.generate_tests(1, 'gen', 2, 4, 2)
 #     mct.generate_tests(1, 'gen', 40, 49, 46)
   
     mct._merge_pdfs('gen', 'gen/all.pdf')

@@ -14,10 +14,10 @@
         "\\usepackage[center]{crop}",
         "\\usepackage{../data/def}"
 	],
-	"name_and_stuff": "{\\fontsize{13}{14}\\selectfont Név:\\hfill~Csoport:\\hfill~}",
+	"name_and_stuff": ["Név", "Csoport"],
+	"name_and_stuff_widths": ["7cm", "3cm"],
 	"newtheorem_string": "feladat",
 	"problem_environment": "problem",
-	"checkbox": "$\\Box$",
 	"out_file_prefix": "test",
 	"solutions_file": "solutions.txt",
 	"pdflatex": "pdflatex",
