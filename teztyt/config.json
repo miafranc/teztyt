@@ -6,8 +6,8 @@
 	"points_format_string": "{}p",
 	"itemsep": "0pt",
 	"baselinestretch": 1.2,
+	"fontsize": 9,
 	"prologue": [
-		"\\documentclass[9pt,oneside,twocolumn]{extarticle}",
         "\\usepackage[magyar]{babel}",
         "\\usepackage[utf8]{inputenc}",
         "\\usepackage[truedimen, a4paper, left=12mm, right=12mm, top=5mm, bottom=15mm, centering, ignoreheadfoot]{geometry}",

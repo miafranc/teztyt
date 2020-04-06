@@ -13,6 +13,8 @@ import shutil
 
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
 
+import argparse
+
 
 class OneClassMultipleChoiceTest:
     """Class for generating multiple choice tests from a given set of problems
@@ -106,8 +108,8 @@ class OneClassMultipleChoiceTest:
             unicode: LaTeX code for one test.
             unicode: Solution of the test.
         """
-        if len(num_problems) > len(self.data):
-            raise Exception('Too few data files!')
+        if len(num_problems) != len(self.data):
+            raise Exception('Number of data files and number of problems must be equal!')
     
         all_keys = [self.data[i].keys() for i in range(len(self.data))]
 #         print all_keys
@@ -143,6 +145,51 @@ class OneClassMultipleChoiceTest:
 #         print test_solution
         
         return (test_code, test_solution)
+
+    def generate_test_with_problems(self, test_id, problems, out_dir):
+        """Generates a test with the given problems.
+        
+        Parameters:
+            test_id (int): Unique ID (usually index) of test.
+            problems (list): Exact problems to generate from each data file (IDs).
+            out_dir (str or unicode): Path to output directory.
+        
+        Returns:
+            unicode: LaTeX code for one test.
+            unicode: Solution of the test.
+        """
+        if len(problems) != len(self.data):
+            raise Exception('Number of data files and number of problems must be equal!')
+    
+        problem_num = 0
+        
+        test_code = u''
+        test_solution = u''
+        
+        for i in range(len(problems)):
+            for k in problems[i]:
+                problem_num += 1
+                answers = self._shuffle_answers(self.data[i][k])
+                code = self._generate_code(test_id, problem_num, i, k, answers)
+                sol = self._generate_solution(problem_num, i, k, answers)
+                test_code += code
+                test_solution += sol
+            
+#         print selected_keys
+#         print test_code
+#         print test_solution
+        
+        test_code = self._generate_code_prologue(test_id) + test_code + self._generate_code_epilogue()
+        test_solution = unicode(test_id) + u':\n' + test_solution
+        
+#         print test_code
+#         print test_solution
+        
+        self._write_latex(test_id, test_code, out_dir)
+        self._compile_latex(test_id, out_dir)
+        f = codecs.open(join(out_dir, self.config['solutions_file']), 'w', 'utf-8')
+        f.write(test_solution)
+        f.close()
 
     def _generate_code(self, test_id, problem_num, i, k, answers):
         """Generates LaTeX code for a given test problem.
@@ -185,7 +232,8 @@ class OneClassMultipleChoiceTest:
         Returns:
             unicode: The LaTeX code prologue.
         """
-        prologue = u'\n'.join(self.config['prologue']) + u'\n\n'
+        prologue = u'\\documentclass[{}pt,oneside,twocolumn]{{extarticle}}\n'.format(self.config['fontsize'])
+        prologue += u'\n'.join(self.config['prologue']) + u'\n\n'
         
         prologue += u'\\title{{{}\\\\\n'.format(self.config['title'])
         if self.config['subtitle'] != '':
@@ -332,20 +380,61 @@ class OneClassMultipleChoiceTest:
                 pr = PdfFileReader(join(in_dir, f))
                 pw.appendPagesFromReader(pr)
                 if self.config['same_page_number'] and pr.getNumPages() < self.config['max_pages']:
-                    for i in range(self.config['max_pages'] - pr.getNumPages()):
+                    for i in range(self.config['max_pages'] - pr.getNumPages()):  # pylint: disable=unused-variable
                         pw.addBlankPage()
-        
         f = codecs.open(out_file, 'wb')
         pw.write(f)
         f.close()
 
 
+def main(args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', '-c', type=str, required=True, help="Configuration file.")
+    parser.add_argument('--number', '-n', type=int, required=True, help="Number of tests to generate.")
+    parser.add_argument('--files', '-f', type=str, nargs='+', required=True, help="Data files.")
+    parser.add_argument('--problems', '-p', type=int, nargs='+', required=True, help="Number of problems to generate from each file.")
+    parser.add_argument('--out', '-o', type=str, required=True, help="Output directory.")
+    parser.add_argument('--merge', '-m', type=str, required=False, help="If needed, name of the merged tests' file.")
+    
+    args = parser.parse_args(args)
+
+    mct = OneClassMultipleChoiceTest(args.config)
+    mct.read(*args.files)
+    mct.generate_tests(args.number, args.out, *args.problems)
+    if args.merge:
+        mct._merge_pdfs(args.out, args.merge)
+        
+
+if __name__ == "__main__1":
+#     main(sys.argv[1:])
+    
+#     main(["-c ./config.json", "-n 1", "-f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json", "-p 1", "-p 1", "-p 1", "-o ./ooo"])
+#     main(["-c ./config.json", "-n 1", "--files ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json"])
+
+#     main(["-f", "./config.json", "./aaa", "-p", "1"])
+    
+    main("-c ./config.json -n 1 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p 0 0 1 -o ./ooo -m a.pdf".split())
+#     main("-c ./config.json -n 1 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p 1 1 1 -o ./ooo".split())
+
 
 if __name__ == "__main__":
+    mct = OneClassMultipleChoiceTest('config.json')
+    
+    mct.read('data_OK/t1.json',
+             'data_OK/t2.json',
+             'data_OK/t3.json')
+      
+    test_id = 100
+    mct.generate_test_with_problems(test_id, [['2'], ['2'], ['2']], './ooo')
+#     print test_code
+#     print test_solution
+#     mct._write_latex(test_id, test_code, './ooo')
+#     mct._compile_latex(test_id, './ooo')
+    
+
+if __name__ == "__main__1":
     # TODO:
     # ----------
-    # - API: generate given test (i.e. given the problems)
-    # - command line interface
     # - requirements.txt
     # - README.md
     
@@ -366,4 +455,5 @@ if __name__ == "__main__":
 #     mct.generate_tests(1, 'gen', 5)
 #       
 #     mct._merge_pdfs('gen', 'gen/all.pdf')
+
     
