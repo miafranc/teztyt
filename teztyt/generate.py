@@ -3,17 +3,15 @@
 import codecs
 import json
 import random
-import regex
-
 from distutils.spawn import find_executable
 from subprocess import call
 from os.path import join, isfile, isdir
 from os import listdir, unlink
 import shutil
-
-from PyPDF2.pdf import PdfFileReader, PdfFileWriter
-
 import argparse
+
+import regex
+from PyPDF2.pdf import PdfFileReader, PdfFileWriter
 
 
 class OneClassMultipleChoiceTest:
@@ -395,41 +393,22 @@ if __name__ == "__main__1":
 #     main("-c ./config.json -n 1 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p 1 1 1 -o ./ooo".split())
 
 
-if __name__ == "__main__2":
-    mct = OneClassMultipleChoiceTest('config.json')
-    
-    mct.read('data_OK/t1.json',
-             'data_OK/t2.json',
-             'data_OK/t3.json')
-      
-    test_id = 100
-    mct.generate_test_with_problems(test_id, [['2'], ['2'], ['2']], './ooo')
-
-#     mct._write_latex(test_id, test_code, './ooo')
-#     mct._compile_latex(test_id, './ooo')
-    
-
 if __name__ == "__main__":
     # TODO:
     # ----------
     # - README.md
-    
+
     mct = OneClassMultipleChoiceTest('config.json')
     
     mct.read('data_OK/t1.json',
              'data_OK/t2.json',
              'data_OK/t3.json')
-      
+
+    test_id = 100
+    mct.generate_test_with_problems(test_id, [['2'], ['2'], ['2']], './ooo')
+    exit(0)
+    
 #     mct.generate_tests(1, 'gen', 1, 1, 1)
     mct.generate_tests(5, 'gen', 2, 4, 2)
-#     mct.generate_tests(1, 'gen', 40, 49, 46)
-  
     mct._merge_pdfs('gen', 'gen/all.pdf')
-
-#     mct.read('data_OK/uj.json')
-#   
-#     mct.generate_tests(1, 'gen', 5)
-#       
-#     mct._merge_pdfs('gen', 'gen/all.pdf')
-
     
