@@ -110,7 +110,7 @@ anywhere in the body of the problems as `%figures_dir%`.
 
 ## Requirements
 
-* Python 3.x
+* Python 3.x (tested on Python 3.6.9)
   * regex https://pypi.org/project/regex/
   * PyPDF2 https://pypi.org/project/PyPDF2/
 * LaTeX distribution with pdflatex
