@@ -13,7 +13,9 @@ import sys
 
 import regex
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
-from PyPDF2.generic import BooleanObject, NameObject, IndirectObject
+from PyPDF2.generic import BooleanObject, NameObject, IndirectObject, DictionaryObject
+from PyPDF2 import PdfFileMerger
+from copy import deepcopy
 
 
 class OneClassMultipleChoiceTest:
@@ -359,18 +361,26 @@ class OneClassMultipleChoiceTest:
             out_file (str): Path to the merged PDF.
         """
         pw = PdfFileWriter()
-        
-        if "/AcroForm" not in pw._root_object:  # in order to correctly handle PDF forms (https://stackoverflow.com/questions/47288578/pdf-form-filled-with-pypdf2-does-not-show-in-print)
-            pw._root_object.update({NameObject("/AcroForm"): IndirectObject(len(pw._objects), 0, pw)})
-        pw._root_object["/AcroForm"].update({NameObject("/NeedAppearances"): BooleanObject(True)})
-
+         
+        objs = None
         for f in sorted(listdir(in_dir)):
             if isfile(join(in_dir, f)) and regex.match('^test.*\.pdf$', f, flags=regex.IGNORECASE):
                 pr = PdfFileReader(join(in_dir, f))
+                
+                fields = pr.trailer["/Root"]["/AcroForm"]["/Fields"]  # because form data is lost at merging, we need to handle this
+                if objs == None:
+                    objs = fields
+                else:
+                    objs.extend(fields)
+                
                 pw.appendPagesFromReader(pr)
                 if self.config['same_page_number'] and pr.getNumPages() < self.config['max_pages']:
                     for i in range(self.config['max_pages'] - pr.getNumPages()):  # pylint: disable=unused-variable
                         pw.addBlankPage()
+        
+        pw._root_object.update({NameObject("/AcroForm"): IndirectObject(len(pw._objects), 0, pw)})  # inspired from: https://stackoverflow.com/questions/47288578/pdf-form-filled-with-pypdf2-does-not-show-in-print
+        pw._root_object["/AcroForm"].update({NameObject("/Fields"): objs})
+        pw._root_object["/AcroForm"].update({NameObject("/NeedAppearances"): BooleanObject(True)})
         
         f = codecs.open(out_file, 'wb')
         pw.write(f)
@@ -420,8 +430,10 @@ if __name__ == "__test__1":
              'data_OK/t2.json',
              'data_OK/t3.json')
 
-    mct.generate_tests(5, 'gen', 2, 4, 2)
+    mct.generate_tests(2, 'gen', 2, 4, 2)
     mct._merge_pdfs('gen', 'gen/all.pdf')
+#     mct._merge_pdfs2('gen', 'gen/all.pdf')
+#     mct._merge_pdfs3('gen', 'gen/all.pdf')
     
 if __name__ == "__test__2":
     mct = OneClassMultipleChoiceTest('config.json')
