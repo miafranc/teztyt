@@ -13,6 +13,7 @@ import sys
 
 import regex
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
+from PyPDF2.generic import BooleanObject, NameObject, IndirectObject
 
 
 class OneClassMultipleChoiceTest:
@@ -241,7 +242,7 @@ class OneClassMultipleChoiceTest:
         prologue += '\\renewcommand{{\\baselinestretch}}{{{}}}\n\n'.format(self.config['baselinestretch'])
         prologue += '\\begin{document}\n\n\\maketitle\\sloppy\n\n'
         
-#         prologue += '\\begin{Form}[action={}]\n\n'
+        # prologue += '\\begin{Form}[action={}]\n\n'
         prologue += '\\begin{Form}\n\n'
 
         for ind_f, field in enumerate(self.config['name_and_stuff']):
@@ -359,6 +360,10 @@ class OneClassMultipleChoiceTest:
         """
         pw = PdfFileWriter()
         
+        if "/AcroForm" not in pw._root_object:  # in order to correctly handle PDF forms (https://stackoverflow.com/questions/47288578/pdf-form-filled-with-pypdf2-does-not-show-in-print)
+            pw._root_object.update({NameObject("/AcroForm"): IndirectObject(len(pw._objects), 0, pw)})
+        pw._root_object["/AcroForm"].update({NameObject("/NeedAppearances"): BooleanObject(True)})
+
         for f in sorted(listdir(in_dir)):
             if isfile(join(in_dir, f)) and regex.match('^test.*\.pdf$', f, flags=regex.IGNORECASE):
                 pr = PdfFileReader(join(in_dir, f))
@@ -366,6 +371,7 @@ class OneClassMultipleChoiceTest:
                 if self.config['same_page_number'] and pr.getNumPages() < self.config['max_pages']:
                     for i in range(self.config['max_pages'] - pr.getNumPages()):  # pylint: disable=unused-variable
                         pw.addBlankPage()
+        
         f = codecs.open(out_file, 'wb')
         pw.write(f)
         f.close()
