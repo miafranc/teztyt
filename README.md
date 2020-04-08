@@ -11,7 +11,7 @@ Simple one-class multiple choice test generator in Python.
 The input file format containing the problems has to be the following:
 ```
 {
-	"unique_problem_key": {
+	"unique_integer_problem_key": {
 		"P": points,
 		"Q": "Question?",
 		"A": {
@@ -40,7 +40,27 @@ file and 1 3-point problem from the last file (of course, there are other correc
 
 ## Command-line interface
 
+```
+usage: generate.py [-h] --config CONFIG --number NUMBER --files FILES
+                   [FILES ...] --problems PROBLEMS --out OUT [--merge MERGE]
 
+optional arguments:
+  -h, --help            show this help message and exit
+  --config CONFIG, -c CONFIG
+                        Configuration file.
+  --number NUMBER, -n NUMBER
+                        Number of tests to generate.
+  --files FILES [FILES ...], -f FILES [FILES ...]
+                        Data files. E.g. '-f d1.json d2.json d3.json'
+  --problems PROBLEMS, -p PROBLEMS
+                        Number of problems to generate from each file in form
+                        of a list. E.g. '-p [3, 2, 1]'. If '-n 0' is used
+                        (test generation using given problems), this list must
+                        contain lists, e.g. [[1], [1,2], [5]].
+  --out OUT, -o OUT     Output directory.
+  --merge MERGE, -m MERGE
+                        Optional, the name of the merged tests' file.
+```
 
 ## Config file
 
