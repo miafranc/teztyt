@@ -1,0 +1,54 @@
+{
+	"1": {
+		"P": 2,
+		"Q": "Ekvivalens-e a következő 2 reguláris kifejezés? $$(0 + 00{*}1){*} \\quad \\mbox{és} \\quad \\varepsilon + 0(0 + 1){*}1$$",
+		"A": {
+			"a": "nem",
+			"b": "igen"
+		}
+	},
+
+	"2": {
+		"P": 2,
+		"Q": "Ekvivalens-e a következő 2 reguláris kifejezés? $$(1 + 00{*}1){*} \\quad \\mbox{és} \\quad \\varepsilon + (0+1){*}1$$",
+		"A": {
+			"a": "igen",
+			"b": "nem",
+			"c": "talán"
+		}
+	},
+
+	"3": {
+		"P": 2,
+		"Q": "Adottak a következő átírási szabályok: \\begin{eqnarray*}S &\\to& bS \\;|\\; Xb\\\\X &\\to& Xb \\;|\\; aS \\;|\\; \\varepsilon \\end{eqnarray*} Mi a grammatika által generált nyelv?",
+		"A": {
+			"a": "$\\{(\\prod_{i=1}^{k} (b^{n_{i}}a)) b^{p} \\prod_{i=1}^{k} b^{m_{i}} \\;|\\; k\\geq 0, n_{i}\\geq 0, m_{i}\\geq 1, p\\geq 1\\}$",
+			"b": "\\{$(\\prod_{i=1}^{k} (b^{n_{i}}a)) b^{p} \\prod_{i=1}^{k} b^{m_{i}} \\;|\\; k\\geq 0, n_{i}\\geq 0, m_{i}\\geq 1, p\\geq 0\\}$",
+			"c": "$\\{b^{n}ab^{m} \\;|\\; n\\geq 0, m\\geq 1\\}$",
+			"d": "$\\{b^{n}ab^{m} \\;|\\; n\\geq 1, m\\geq 0\\}$"
+		}
+	},
+
+	"4": {
+		"P": 2,
+		"Q": "Adottak a következő átírási szabályok: \\begin{eqnarray*}S &\\to& aA \\;|\\; \\varepsilon\\\\A &\\to& bA \\;|\\; bS \\;|\\; a \\end{eqnarray*} Mi a grammatika által generált nyelv?",
+		"A": {
+			"a": "$\\{(\\prod_{i=1}^{k}(ab^{n_{i}}))X \\;|\\; X \\in \\{ \\varepsilon, ab^{n}a \\;|\\; n \\geq 0\\}, k\\geq 0, n_{i}\\geq 1\\}$",
+			"b": "$\\{(\\prod_{i=1}^{k}(ab^{n_{i}})) \\;|\\; k\\geq 0, n_{i}\\geq 1\\}$",
+			"c": "$\\{(\\prod_{i=1}^{k}(ab^{n_{i}}))ab^{n}a \\;|\\; k\\geq 0, n_{i}\\geq 1, n\\geq 0\\}$",
+			"d": "$\\{(\\prod_{i=1}^{k}(ab^{n_{i}}))aa \\;|\\; k\\geq 0, n_{i}\\geq 1\\}$"
+		}
+	},
+
+	"5": {
+		"P": 2,
+		"Q": "Adott a következő átmenetekkel rendelkező veremautomata: $(q_{0}, (a, z_{0}/z_{0}a), q_{1})$, $(q_{0}, (a, z_{0}/z_{0}aa), q_{1})$, $(q_{1}, (a, a/aa), q_{1})$, $(q_{1}, (a, a/aaa), q_{1})$, $(q_{1}, (b,a/\\varepsilon), q_{2})$, $(q_{2}, (b,a/\\varepsilon), q_{2})$, $(q_{2}, (\\varepsilon, z_{0}/\\varepsilon), q_{3})$, $q_{0}$ kezdő, $q_{3}$ pedig végállapot, a verem kezdőszimbóluma $z_{0}$. Az automata a következő nyelvet ismeri fel:",
+		"A": {
+			"a": "$\\{ a^{n}b^{m} \\;|\\; 1\\leq n \\leq m \\leq 2n \\}$",
+			"b": "$\\{ a^{m}b^{n} \\;|\\; 1\\leq n \\leq m \\leq 2n \\}$",
+			"c": "$\\{ a^{n}b^{m} \\;|\\; 0\\leq n \\leq m \\leq 2n \\}$",
+			"d": "$\\{ a^{m}b^{n} \\;|\\; 0\\leq n \\leq m \\leq 2n \\}$"
+		}
+	}
+	
+}

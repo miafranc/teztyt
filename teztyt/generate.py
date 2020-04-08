@@ -7,7 +7,7 @@ from distutils.spawn import find_executable
 from subprocess import call
 from os.path import join, isfile, isdir
 from os import listdir, unlink
-import shutil
+# import shutil
 import argparse
 import sys
 
@@ -65,7 +65,9 @@ class OneClassMultipleChoiceTest:
             out_dir (str): Path to output directory.
             *num_problems (ints): Number of problems to generate from each data file.
         """
-        map(lambda x: shutil.rmtree(x) if isdir(x) else unlink(x), (join(out_dir, f) for f in listdir(out_dir)))
+#         for f in listdir(out_dir):  # emptying the output directory
+#             x = join(out_dir, f)
+#             shutil.rmtree(x) if isdir(x) else unlink(x)
 
         solutions = '===\n'
         
@@ -151,6 +153,10 @@ class OneClassMultipleChoiceTest:
         """
         if len(problems) != len(self.data):
             raise Exception('Number of data files and number of problems must be equal!')
+    
+#         for f in listdir(out_dir):  # emptying the output directory
+#             x = join(out_dir, f)
+#             shutil.rmtree(x) if isdir(x) else unlink(x)
     
         problem_num = 0
         
