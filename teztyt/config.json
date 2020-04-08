@@ -7,6 +7,7 @@
 	"itemsep": "0pt",
 	"baselinestretch": 1.2,
 	"fontsize": 9,
+	"columns": "twocolumn",
 	"prologue": [
         "\\usepackage[magyar]{babel}",
         "\\usepackage[utf8]{inputenc}",

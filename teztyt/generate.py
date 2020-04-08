@@ -9,6 +9,7 @@ from os.path import join, isfile, isdir
 from os import listdir, unlink
 import shutil
 import argparse
+import sys
 
 import regex
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
@@ -159,9 +160,9 @@ class OneClassMultipleChoiceTest:
         for i in range(len(problems)):
             for k in problems[i]:
                 problem_num += 1
-                answers = self._shuffle_answers(self.data[i][k])
-                code = self._generate_code(test_id, problem_num, i, k, answers)
-                sol = self._generate_solution(problem_num, i, k, answers)
+                answers = self._shuffle_answers(self.data[i][str(k)])  # conversion is needed in order to simplify command-line stuff (str(k))
+                code = self._generate_code(test_id, problem_num, i, str(k), answers)
+                sol = self._generate_solution(problem_num, i, str(k), answers)
                 test_code += code
                 test_solution += sol
             
@@ -213,7 +214,8 @@ class OneClassMultipleChoiceTest:
         Returns:
             str: The LaTeX code prologue.
         """
-        prologue = '\\documentclass[{}pt,oneside,twocolumn]{{extarticle}}\n'.format(self.config['fontsize'])
+        prologue = '\\documentclass[{}pt,oneside,{}]{{extarticle}}\n'.format(self.config['fontsize'], 
+                                                                             self.config['columns'])
         prologue += '\n'.join(self.config['prologue']) + '\n\n'
         
         prologue += '\\title{{{}\\\\\n'.format(self.config['title'])
@@ -240,7 +242,7 @@ class OneClassMultipleChoiceTest:
             prologue += '\\noindent\\TextField[name={},width={}]{{{}:}}{}\n'.format('t{}:{}'.format(test_id, ind_f), 
                                                                                      self.config['name_and_stuff_widths'][ind_f], 
                                                                                      field,
-                                                                                     '\\\\\\\\' if ind_f < len(self.config['name_and_stuff']) -1 else '')
+                                                                                     '\\\\\\\\' if ind_f < len(self.config['name_and_stuff'])-1 else '')
         
         return prologue
     
@@ -367,33 +369,44 @@ def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', '-c', type=str, required=True, help="Configuration file.")
     parser.add_argument('--number', '-n', type=int, required=True, help="Number of tests to generate.")
-    parser.add_argument('--files', '-f', type=str, nargs='+', required=True, help="Data files.")
-    parser.add_argument('--problems', '-p', type=int, nargs='+', required=True, help="Number of problems to generate from each file.")
+    parser.add_argument('--files', '-f', type=str, nargs='+', required=True, help="Data files. E.g. '-f d1.json d2.json d3.json'")
+#     parser.add_argument('--problems', '-p', type=int, nargs='+', required=True, help="Number of problems to generate from each file. E.g. '-p 3 2 1'")
+    parser.add_argument('--problems', '-p', type=str, required=True, 
+                        help="""Number of problems to generate from each file in form of a list. E.g. '-p [3, 2, 1]'.
+                                If '-n 0' is used (test generation using given problems), this list must contain
+                                lists, e.g. [[1], [1,2], [5]].""")
     parser.add_argument('--out', '-o', type=str, required=True, help="Output directory.")
-    parser.add_argument('--merge', '-m', type=str, required=False, help="If needed, name of the merged tests' file.")
+    parser.add_argument('--merge', '-m', type=str, required=False, help="Optional, the name of the merged tests' file.")
     
     args = parser.parse_args(args)
 
     mct = OneClassMultipleChoiceTest(args.config)
     mct.read(*args.files)
-    mct.generate_tests(args.number, args.out, *args.problems)
-    if args.merge:
-        mct._merge_pdfs(args.out, args.merge)
+    
+    if args.number == 0:  # given problems
+        print(json.loads(args.problems))
+        mct.generate_test_with_problems(1, json.loads(args.problems), args.out)
+#         mct.generate_test_with_problems(1, [[2],[2],[2]], args.out)
+    else:
+#         mct.generate_tests(args.number, args.out, *args.problems)
+        print(json.loads(args.problems))
+        mct.generate_tests(args.number, args.out, *json.loads(args.problems))
+        if args.merge:
+            mct._merge_pdfs(args.out, args.merge)
         
 
-if __name__ == "__main__1":
-#     main(sys.argv[1:])
-    
-#     main(["-c ./config.json", "-n 1", "-f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json", "-p 1", "-p 1", "-p 1", "-o ./ooo"])
-#     main(["-c ./config.json", "-n 1", "--files ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json"])
-
-#     main(["-f", "./config.json", "./aaa", "-p", "1"])
-    
-    main("-c ./config.json -n 1 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p 0 0 1 -o ./ooo -m a.pdf".split())
-#     main("-c ./config.json -n 1 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p 1 1 1 -o ./ooo".split())
-
-
 if __name__ == "__main__":
+#     main(sys.argv[1:])
+
+    main("-h".split())
+    
+#     main("-c ./config.json -n 0 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p [[1,1],[1],[1]] -o ./ooo".split())
+#     main("-c ./config.json -n 0 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p [[1,1],[],[2]] -o ./ooo".split())
+#     main("-c ./config.json -n 1 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p [1,0,0] -o ./ooo".split())
+#     main("-c ./config.json -n 1 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p [0,0,0] -o ./ooo".split())
+
+
+if __name__ == "__main__1":
     # TODO:
     # ----------
     # - README.md
@@ -404,9 +417,9 @@ if __name__ == "__main__":
              'data_OK/t2.json',
              'data_OK/t3.json')
 
-    test_id = 100
-    mct.generate_test_with_problems(test_id, [['2'], ['2'], ['2']], './ooo')
-    exit(0)
+#     test_id = 100
+#     mct.generate_test_with_problems(test_id, [['2'], ['2'], ['2']], './ooo')
+#     exit(0)
     
 #     mct.generate_tests(1, 'gen', 1, 1, 1)
     mct.generate_tests(5, 'gen', 2, 4, 2)
