@@ -4,39 +4,18 @@ Simple one-class multiple choice test generator in Python.
 
 ## About
 
-## Requirements
+__teztyt__ is a very simple _multiple choice test_ generator written in Python.
+It has a simple command-line interface by which _random tests_ can be generated 
+in _fillable PDF_ format. 
 
-## JSON file format
+The program generates LaTeX code, which is in turn compiled to PDF, 
+therefore Python and a LaTeX distribution is needed in order to be able to use it
+(see the __Requirements__ section below).
 
-The input file format containing the problems has to be the following:
-```
-{
-	"unique_integer_problem_key": {
-		"P": points,
-		"Q": "Question?",
-		"A": {
-			"a1": "1st correct answer.",
-			"a2": "2nd correct answer.",
-			"b": "3rd answer.",
-			"c": "4th answer."
-		}
-	},
-...
-}
-```
-The dictionary with key `"A"` can contain an arbitrary number of possible answers.
-The structure of the keys are important here: all answers are considered to be correct
-if the regexp `correct_key_match` (see below) matches it (in this case `"^a.*"`). 
-
-One can create separate data files storing _different_ problems. For example, usually
-one would like to generate a set of problems totaling to a given number of points (e.g. 10).
-In order to do this efficiently, one can create separate JSON files grouping
-problems having the same difficulty, and consequently the same points.
-
-__Example__: Suppose we have 3 files: one with 1-point, another one with 2-point and a third one
-with 3-point problems. If one would like to generate a random test totaling to 10 points,
-could simply get 3 1-point random problems from the first file, 2 2-point problems from the second
-file and 1 3-point problem from the last file (of course, there are other correct combinations).
+The databases containing the problems have to be in JSON format (see the __JSON file format__ section
+below). Since LaTeX is involved, math formulae and other LaTeX code can be used in the
+problem description (question and answers), but care should be taken in correctly escaping 
+the characters (e.g. `$x \\in \\{1,2,3\\}$`).
 
 ## Command-line interface
 
@@ -61,6 +40,38 @@ optional arguments:
   --merge MERGE, -m MERGE
                         Optional, the name of the merged tests' file.
 ```
+
+## JSON file format
+
+The input file format containing the problems has to be the following:
+```
+{
+	"unique_integer_problem_key": {
+		"P": points,
+		"Q": "Question?",
+		"A": {
+			"a1": "1st correct answer.",
+			"a2": "2nd correct answer.",
+			"b": "3rd answer.",
+			"c": "4th answer."
+		}
+	},
+...
+}
+```
+The dictionary with key `"A"` can contain an arbitrary number of possible answers.
+The keys are important here: all answers are considered to be correct
+if the regexp `correct_key_match` (see below) matches it (in this case `"^a.*"`). 
+
+One can create separate data files storing _different_ problems. For example, usually
+one would like to generate a set of problems totaling to a given number of points (e.g. 10).
+In order to do this efficiently, one can create separate JSON files grouping
+problems having the same difficulty, and consequently the same points.
+
+__Example__: Suppose we have 3 files: one with 1-point, another one with 2-point and a third one
+with 3-point problems. If one would like to generate a random test totaling to 10 points,
+could simply get 3 1-point random problems from the first file, 2 2-point problems from the second
+file and 1 3-point problem from the last file (of course, there are other correct combinations).
 
 ## Config file
 
@@ -96,6 +107,15 @@ problem_index (data_file_index/problem_key): correct_answer_index_1 [, correct_a
 because of the maximum number of pages constraint).
 * `figures_dir`: Folder of the external data used in the problems (e.g. images, tikz, etc.). The path can be used
 anywhere in the body of the problems as `%figures_dir%`.
+
+## Requirements
+
+* Python 3.x
+  * regex https://pypi.org/project/regex/
+  * PyPDF2 https://pypi.org/project/PyPDF2/
+* LaTeX distribution with pdflatex
+  * extsizes https://ctan.org/pkg/extsizes
+  * hyperref https://ctan.org/pkg/hyperref
 
 ## API
 
