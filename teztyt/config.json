@@ -12,8 +12,7 @@
         "\\usepackage[magyar]{babel}",
         "\\usepackage[utf8]{inputenc}",
         "\\usepackage[truedimen, a4paper, left=12mm, right=12mm, top=5mm, bottom=15mm, centering, ignoreheadfoot]{geometry}",
-        "\\usepackage[center]{crop}",
-        "\\usepackage{../data/def}"
+        "\\usepackage[center]{crop}"
 	],
 	"name_and_stuff": ["Név", "Csoport"],
 	"name_and_stuff_widths": ["7cm", "3cm"],
