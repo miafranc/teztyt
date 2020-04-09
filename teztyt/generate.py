@@ -5,17 +5,15 @@ import json
 import random
 from distutils.spawn import find_executable
 from subprocess import call
-from os.path import join, isfile, isdir
-from os import listdir, unlink
+from os.path import join, isfile
+from os import listdir
 # import shutil
 import argparse
 import sys
 
 import regex
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
-from PyPDF2.generic import BooleanObject, NameObject, IndirectObject, DictionaryObject
-from PyPDF2 import PdfFileMerger
-from copy import deepcopy
+from PyPDF2.generic import BooleanObject, NameObject
 
 
 class OneClassMultipleChoiceTest:
@@ -68,10 +66,6 @@ class OneClassMultipleChoiceTest:
             out_dir (str): Path to output directory.
             *num_problems (ints): Number of problems to generate from each data file.
         """
-#         for f in listdir(out_dir):  # emptying the output directory
-#             x = join(out_dir, f)
-#             shutil.rmtree(x) if isdir(x) else unlink(x)
-
         solutions = '===\n'
         
         for test_id in range(num_tests):
@@ -157,10 +151,6 @@ class OneClassMultipleChoiceTest:
         if len(problems) != len(self.data):
             raise Exception('Number of data files and number of problems must be equal!')
     
-#         for f in listdir(out_dir):  # emptying the output directory
-#             x = join(out_dir, f)
-#             shutil.rmtree(x) if isdir(x) else unlink(x)
-    
         problem_num = 0
         
         test_code = ''
@@ -206,7 +196,7 @@ class OneClassMultipleChoiceTest:
         for ind_a, a in enumerate(answers):
             ans = self.data[i][k]['A'][a].replace('%figures_dir%', self.config['figures_dir'])
 #             code += '\\item[{}] {}'.format(self.config['checkbox'], ans)
-            code += '\\item[\\checkBoxHref{{{}}}] {}'.format('{}:{}:{}:{}'.format(test_id, i, k, ind_a), ans)
+            code += '\\item[\\checkBoxHref{{{}}}] {}'.format('{}:{}:{}:{}:{}'.format(test_id, problem_num, i+1, k, ind_a+1), ans)
             code += ' %\n' if regex.match(self.config['correct_key_match'], a) else '\n'
          
         code += '\\end{itemize}\n'
@@ -353,33 +343,32 @@ class OneClassMultipleChoiceTest:
 
     def _merge_pdfs(self, in_dir, out_file):
         """Merges PDFs in a given directory and outputs it to a single PDF file.
-        Be careful: if `same_page_number` is set to true in the config file, all tests
-        will have `max_pages` number of pages.
+        If `same_page_number` is set to true in the config file, all tests will have `max_pages` number of pages.
         
         Parameters:
             in_dir (str): Path to the input directory containing the PDF files to be merged.
             out_file (str): Path to the merged PDF.
         """
         pw = PdfFileWriter()
-         
-        objs = None
+        
+        firstPDF = True
         for f in sorted(listdir(in_dir)):
             if isfile(join(in_dir, f)) and regex.match('^test.*\.pdf$', f, flags=regex.IGNORECASE):
-                pr = PdfFileReader(join(in_dir, f))
+                pr = PdfFileReader(join(in_dir, f), strict=False)
                 
-                fields = pr.trailer["/Root"]["/AcroForm"]["/Fields"]  # because form data is lost at merging, we need to handle this
-                if objs == None:
-                    objs = fields
-                else:
-                    objs.extend(fields)
+                form = pr.trailer["/Root"]["/AcroForm"]  # see: https://stackoverflow.com/questions/47288578/pdf-form-filled-with-pypdf2-does-not-show-in-print
                 
                 pw.appendPagesFromReader(pr)
                 if self.config['same_page_number'] and pr.getNumPages() < self.config['max_pages']:
                     for i in range(self.config['max_pages'] - pr.getNumPages()):  # pylint: disable=unused-variable
                         pw.addBlankPage()
-        
-        pw._root_object.update({NameObject("/AcroForm"): IndirectObject(len(pw._objects), 0, pw)})  # inspired from: https://stackoverflow.com/questions/47288578/pdf-form-filled-with-pypdf2-does-not-show-in-print
-        pw._root_object["/AcroForm"].update({NameObject("/Fields"): objs})
+                
+                if firstPDF:
+                    pw._root_object.update({NameObject("/AcroForm"): form})
+                    firstPDF = False
+                else:
+                    pw._root_object["/AcroForm"]["/Fields"].extend(form["/Fields"])
+                
         pw._root_object["/AcroForm"].update({NameObject("/NeedAppearances"): BooleanObject(True)})
         
         f = codecs.open(out_file, 'wb')
@@ -424,6 +413,7 @@ if __name__ == "__main__":
 
 
 if __name__ == "__test__1":
+# if __name__ == "__main__":
     mct = OneClassMultipleChoiceTest('config.json')
     
     mct.read('data_OK/t1.json',
@@ -432,8 +422,7 @@ if __name__ == "__test__1":
 
     mct.generate_tests(2, 'gen', 2, 4, 2)
     mct._merge_pdfs('gen', 'gen/all.pdf')
-#     mct._merge_pdfs2('gen', 'gen/all.pdf')
-#     mct._merge_pdfs3('gen', 'gen/all.pdf')
+
     
 if __name__ == "__test__2":
     mct = OneClassMultipleChoiceTest('config.json')
