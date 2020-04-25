@@ -20,8 +20,19 @@ the characters (e.g. `$x \\in \\{1,2,3\\}$`).
 ## Command-line interface
 
 ```
-usage: generate.py [-h] --config CONFIG --number NUMBER --files FILES
-                   [FILES ...] --problems PROBLEMS --out OUT [--merge MERGE]
+usage: ttt.py [-h] {gen,eval} ...
+
+positional arguments:
+  {gen,eval}  sub-command help
+    gen       Generate tests
+    eval      Evaluate tests
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+
+usage: ttt.py gen [-h] --config CONFIG --number NUMBER --files FILES
+                  [FILES ...] --problems PROBLEMS --out OUT [--merge MERGE]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -39,6 +50,19 @@ optional arguments:
   --out OUT, -o OUT     Output directory.
   --merge MERGE, -m MERGE
                         Optional, the name of the merged tests' file.
+
+
+usage: ttt.py eval [-h] --config CONFIG --solutions SOLUTIONS --dir DIR --out
+                   OUT
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --config CONFIG, -c CONFIG
+                        Configuration file.
+  --solutions SOLUTIONS, -s SOLUTIONS
+                        Solutions file.
+  --dir DIR, -d DIR     Input directory.
+  --out OUT, -o OUT     Output filename.
 ```
 
 ## JSON file format
@@ -73,6 +97,12 @@ with 3-point problems. If one would like to generate a random test totaling to 1
 could simply get 3 1-point random problems from the first file, 2 2-point problems from the second
 file and 1 3-point problem from the last file (of course, there are other correct combinations).
 
+## Evaluation
+
+It is possible to also evaluate the solved tests (see the `eval` sub-command above).
+
+
+
 ## Config file
 
 * `title`
@@ -94,7 +124,7 @@ file and 1 3-point problem from the last file (of course, there are other correc
 ```
 ===
 test_id:
-problem_index (data_file_index/problem_key): correct_answer_index_1 [, correct_answer_index_2, ...]
+problem_index (data_file_index/problem_key/points): correct_answer_index_1 [, correct_answer_index_2, ...]
 ...
 ===
 ...
@@ -107,6 +137,16 @@ problem_index (data_file_index/problem_key): correct_answer_index_1 [, correct_a
 because of the maximum number of pages constraint).
 * `figures_dir`: Folder of the external data used in the problems (e.g. images, tikz, etc.). The path can be used
 anywhere in the body of the problems as `%figures_dir%`.
+* `evaluation`: Type of evaluation. Three evaluation schemes are defined:
+  * `all`: All-or-nothing scheme: The points are given if and only if all the correct answers are checked.
+  * `negative`: Proportional negative marking: Incorrect answers are also graded by negative scores. The score is calculated as `((|C /\ A| - |A - C|) / |A|) * p`, where `C` denotes the set of correct answers, `A` is the set of the answers given and `p` is the points assigned to the problem.
+  * `semi-negative`: Proportional semi-negative marking: Incorrect answers are also graded by negative scores, but scores obtained for a problem always positive. The score is calculated as `max(0, ((|C /\ A| - |A - C|) / |A|) * p)`, where `C` denotes the set of correct answers, `A` is the set of the answers given and `p` is the points assigned to the problem.
+  * `my`: User-defined evaluation scheme. In this case the evaluation is performed evaluating the Python lambda function given by `evaluation_function` (see below).
+* `evaluation_function`: The lambda evaluation function having the following 4 parameters: `c`, `a`, `r`, `p`:
+  * `c`: List of correct answers.
+  * `a`: List of the checked answers.
+  * `r`: List of the remaining (unchecked) answers.
+  * `p`: Points.  
 
 ## Requirements
 
