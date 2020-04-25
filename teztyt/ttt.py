@@ -7,13 +7,14 @@ from distutils.spawn import find_executable
 from subprocess import call
 from os.path import join, isfile
 from os import listdir
-# import shutil
 import argparse
 import sys
 
 import regex
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
 from PyPDF2.generic import BooleanObject, NameObject
+
+from pprint import pprint
 
 
 class OneClassMultipleChoiceTest:
@@ -28,11 +29,20 @@ class OneClassMultipleChoiceTest:
         Parameters:
             config_file (str): Path to the JSON configuration file.
         """
-        self.config = self.load_json(config_file)
+        self.config = self._load_json(config_file)
         self.data = []
-
+        
+        self.solutions = {}
+        
+        self.solution_regex = regex.compile(r'(\d+) \((\d+)/(\d+)/(\d+)\): (\d+(, \d+)*)')
+        self.solution_format = '{} ({}/{}/{}): {}'
+        self.text_separator = '===\n'
+        
+        self.YES = '/Yes'
+        self.NO = '/Off'
+        
     @staticmethod
-    def load_json(json_filename):
+    def _load_json(json_filename):
         """Returns the content of a JSON file.
         
         Parameters:
@@ -55,7 +65,7 @@ class OneClassMultipleChoiceTest:
         """
         self.data = []
         for f in filenames:
-            self.data.append(self.load_json(f))
+            self.data.append(self._load_json(f))
 
     def generate_tests(self, num_tests, out_dir, *num_problems):
         """Generates a given a number of tests and outputs the generated PDF
@@ -66,7 +76,7 @@ class OneClassMultipleChoiceTest:
             out_dir (str): Path to output directory.
             *num_problems (ints): Number of problems to generate from each data file.
         """
-        solutions = '===\n'
+        solutions = []
         
         for test_id in range(num_tests):
             (code, sol) = self.generate_test(test_id + 1, *num_problems)
@@ -88,10 +98,10 @@ class OneClassMultipleChoiceTest:
             if page_num > self.config['max_pages']:
                 raise Exception('Could not generate tests: could not fit into given number of pages!')
             
-            solutions += sol + '===\n'
+            solutions.append(sol)
             
         f = codecs.open(join(out_dir, self.config['solutions_file']), 'w', 'utf-8')
-        f.write(solutions)
+        f.write(self.text_separator + self.text_separator.join(solutions) + self.text_separator)
         f.close()
 
     def generate_test(self, test_id, *num_problems):
@@ -127,10 +137,10 @@ class OneClassMultipleChoiceTest:
                 problem_num += 1
                 answers = self._shuffle_answers(self.data[i][k])
                 code = self._generate_code(test_id, problem_num, i, k, answers)
-                sol = self._generate_solution(problem_num, i, k, answers)
+                sol = self._generate_solution(problem_num, i, k, answers, self.data[i][k]['P'])
                 test_code += code
                 test_solution += sol
-            
+        
         test_code = self._generate_code_prologue(test_id) + test_code + self._generate_code_epilogue()
         test_solution = str(test_id) + ':\n' + test_solution
         
@@ -161,12 +171,12 @@ class OneClassMultipleChoiceTest:
                 problem_num += 1
                 answers = self._shuffle_answers(self.data[i][str(k)])  # conversion is needed in order to simplify command-line stuff (str(k))
                 code = self._generate_code(test_id, problem_num, i, str(k), answers)
-                sol = self._generate_solution(problem_num, i, str(k), answers)
+                sol = self._generate_solution(problem_num, i, str(k), answers, self.data[i][str(k)]['P'])
                 test_code += code
                 test_solution += sol
             
         test_code = self._generate_code_prologue(test_id) + test_code + self._generate_code_epilogue()
-        test_solution = str(test_id) + ':\n' + test_solution
+        test_solution = self.text_separator + str(test_id) + ':\n' + test_solution + self.text_separator
         
         self._write_latex(test_id, test_code, out_dir)
         self._compile_latex(test_id, out_dir)
@@ -195,7 +205,6 @@ class OneClassMultipleChoiceTest:
         
         for ind_a, a in enumerate(answers):
             ans = self.data[i][k]['A'][a].replace('%figures_dir%', self.config['figures_dir'])
-#             code += '\\item[{}] {}'.format(self.config['checkbox'], ans)
             code += '\\item[\\checkBoxHref{{{}}}] {}'.format('{}:{}:{}:{}:{}'.format(test_id, problem_num, i+1, k, ind_a+1), ans)
             code += ' %\n' if regex.match(self.config['correct_key_match'], a) else '\n'
          
@@ -255,7 +264,7 @@ class OneClassMultipleChoiceTest:
         epilogue += '\n\\end{document}'
         return epilogue
     
-    def _generate_solution(self, problem_num, i, k, answers):
+    def _generate_solution(self, problem_num, i, k, answers, points):
         """Generates text describing the solution of a given problem.
         
         Parameters:
@@ -267,18 +276,12 @@ class OneClassMultipleChoiceTest:
         Returns:
             str: Text describing the solution of a given problem.
         """
-        sol = '{} ({}/{}): '.format(problem_num, i + 1, k)
-        first_correct_answer = True
+        corr_ans = []
         for ind, a in enumerate(answers):
-            if first_correct_answer:
-                if regex.match(self.config['correct_key_match'], a):
-                    sol += '{}'.format(ind + 1)
-                    first_correct_answer = False
-            else:
-                if regex.match(self.config['correct_key_match'], a):
-                    sol += ', {}'.format(ind + 1)
-         
-        return sol + '\n'
+            if regex.match(self.config['correct_key_match'], a):
+                corr_ans.append(str(ind + 1))
+        
+        return (self.solution_format + '\n').format(problem_num, i + 1, k, points, ', '.join(corr_ans))
     
     def _shuffle_answers(self, problem):
         """Shuffles the answers of a given problem.
@@ -375,45 +378,187 @@ class OneClassMultipleChoiceTest:
         pw.write(f)
         f.close()
 
+    def _extract_pdf_forms(self, fname):
+        """Extracts interactive form fields data from a PDF file.
+        
+        Parameters:
+            fname (str): Path to PDF file.
+        
+        Returns:
+            dict: Form fields data extracted.
+        """
+        f = PdfFileReader(fname)
+        return f.getFields()
+
+    def load_solutions(self, fname):
+        """Loads solutions file.
+        
+        Parameters:
+            fname (str): Path to solutions file.
+        
+        Returns:
+            dict: Solutions in a dict: {test_id: {problem_id: [datafile_index, problem_key, problem_points, [correct_answer_index1, correct_answer_index2, ...]], ... } ... }
+                  (Also sets `self.solutions`)
+        """
+        f = codecs.open(fname, 'r', 'utf-8')
+        data = f.read()
+        f.close()
+        
+        tests = filter(None, regex.split(self.text_separator, data))
+        
+        solutions = {}
+
+        for t in tests:
+            problems = list(filter(None, regex.split(r'\n', t)))
+            test_id = regex.match(r'(\d+):', problems[0]).group(1)
+            solutions[test_id] = {}
+            for p in problems[1:]:
+                m = regex.match(self.solution_regex, p)
+                problem_id, datafile_index, problem_key, problem_points, right_answer_index = m.group(1), m.group(2), m.group(3), m.group(4), regex.split(', ', m.group(5))
+                solutions[test_id][problem_id] = [datafile_index, problem_key, problem_points, right_answer_index]
+        
+        self.solutions = solutions
+        return solutions
+
+    def evaluate_test(self, fname):
+        """Evaluate a test (a PDF file) given a solution file and an evaluation scheme.
+        Solutions have to be loaded first.
+        
+        Parameters:
+            fname (str): Path to PDF file.
+        
+        Returns:
+            str: Test ID.
+            dict: Dictionary of text data extracted: {text_key: text_value, ...}
+            float: Points collected.
+            list (of strs): List of correct indices.
+            list (of strs): List of checked indices.
+        """
+        fields = self._extract_pdf_forms(fname)
+        
+        all_keys = list(fields.keys())
+        problem_keys = list(filter(lambda x: x[0] != 't', all_keys))
+        text_keys = list(filter(lambda x: x[0] == 't', all_keys))
+        test_id = problem_keys[0][:problem_keys[0].index(':')]
+        
+        problem_solution = self.solutions[test_id]
+        
+        points = 0.
+        correct_indices = []
+        checked_indices = []
+        
+        schema = lambda c, a, r, p: p if set(c) == set(a) else 0  # default: all-or-nothing scheme
+        if self.config['evaluation'] == 'all':
+            pass
+        elif self.config['evaluation'] == 'negative':  # proportional negative marking
+            schema = lambda c, a, r, p: ((len(set(c).intersection(a)) - len(set(a).difference(c))) / float(len(a))) * p if len(a) > 0 else 0
+        elif self.config['evaluation'] == 'semi-negative':  # proportional semi-negative marking (?)
+            schema = lambda c, a, r, p: max(0, ((len(set(c).intersection(a)) - len(set(a).difference(c))) / float(len(a))) * p) if len(a) > 0 else 0
+        elif self.config['evaluation'] == 'my':  # user-defined
+            schema = eval(self.config['evaluation_function'])
+        
+        for problem_id in problem_solution.keys():
+            correct_answers = problem_solution[problem_id][3]
+            checked_answers = [x[str.rindex(x, ':') + 1:] for x in filter(lambda x: x.startswith('{}:{}'.format(test_id, problem_id)) 
+                                                                          and fields[x]['/V'] == self.YES, problem_keys)]
+            rest_answers = [x[str.rindex(x, ':') + 1:] for x in filter(lambda x: x.startswith('{}:{}'.format(test_id, problem_id)) 
+                                                                       and fields[x]['/V'] == self.NO, problem_keys)]
+            correct_indices.append(correct_answers)
+            checked_indices.append(checked_answers)
+            points += schema(correct_answers, checked_answers, rest_answers, float(problem_solution[problem_id][2]))
+    
+        return (test_id, {x:fields[x]['/V'] for x in text_keys}, points, correct_indices, checked_indices)
+    
+    def generate_report(self, test_id, text_data, points, correct_indices, checked_indices):
+        """Generating evaluation reports. 
+        Its parameters are exactly the ones returned by `evaluate_test`. 
+        
+        Parameters:
+            test_id (str): Test ID.
+            text_data (dict): Dictionary of text data extracted: {text_key: text_value, ...}
+            points (float): Points collected.
+            correct_indices (list of strs): List of correct indices.
+            checked_indices (list of strs): List of checked indices.
+        
+        Returns:
+            str: Generated report.
+        """
+        report = 'ID: {}\n{}\nP: {}\n'.format(test_id, '\n'.join(text_data.values()), points)
+#         report += 'ANSWERS / CORRECT ANSWERS:\n'
+        for i in range(len(checked_indices)):
+            report += str(checked_indices[i]) + ' / ' + str(correct_indices[i]) + '\n'
+        return report
+
+    def evaluate_tests(self, in_dir, out_file):
+        """Evaluates test PDFs from a given input directory and writes out the evaluation report.
+        Solutions have to be loaded first.
+        
+        Parameters:
+            in_dir (str): Directory containing the test PDFs.
+            out_file (str): Path to output report file.
+        """
+        reports = []
+        for f in sorted(listdir(in_dir)):
+            fname = join(in_dir, f)
+            if isfile(fname) and regex.match('^.*\.pdf$', f, flags=regex.IGNORECASE):
+                (test_id, text_data, points, correct_indices, checked_indices) = self.evaluate_test(fname)
+                reports.append(self.generate_report(test_id, text_data, points, correct_indices, checked_indices))
+        fout = codecs.open(out_file, 'w', 'utf-8')
+        fout.write(self.text_separator + self.text_separator.join(reports) + self.text_separator)
+        fout.close()
+    
 
 def main(args):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', '-c', type=str, required=True, help="Configuration file.")
-    parser.add_argument('--number', '-n', type=int, required=True, help="Number of tests to generate.")
-    parser.add_argument('--files', '-f', type=str, nargs='+', required=True, help="Data files. E.g. '-f d1.json d2.json d3.json'")
-    parser.add_argument('--problems', '-p', type=str, required=True, 
+    
+    subparsers = parser.add_subparsers(help='sub-command help')
+    
+    # Generate tests:
+    parser_gen = subparsers.add_parser('gen', help='Generate tests')
+    parser_gen.add_argument('--config', '-c', type=str, required=True, help="Configuration file.")
+    parser_gen.add_argument('--number', '-n', type=int, required=True, help="Number of tests to generate.")
+    parser_gen.add_argument('--files', '-f', type=str, nargs='+', required=True, help="Data files. E.g. '-f d1.json d2.json d3.json'")
+    parser_gen.add_argument('--problems', '-p', type=str, required=True, 
                         help="""Number of problems to generate from each file in form of a list. E.g. '-p [3, 2, 1]'.
                                 If '-n 0' is used (test generation using given problems), this list must contain
                                 lists, e.g. [[1], [1,2], [5]].""")
-    parser.add_argument('--out', '-o', type=str, required=True, help="Output directory.")
-    parser.add_argument('--merge', '-m', type=str, required=False, help="Optional, the name of the merged tests' file.")
+    parser_gen.add_argument('--out', '-o', type=str, required=True, help="Output directory.")
+    parser_gen.add_argument('--merge', '-m', type=str, required=False, help="Optional, the name of the merged tests' file.")
+    parser_gen.set_defaults(which='gen')
     
+    # Evaluate tests:
+    parser_eval = subparsers.add_parser('eval', help='Evaluate tests')
+    parser_eval.add_argument('--config', '-c', type=str, required=True, help="Configuration file.")
+    parser_eval.add_argument('--solutions', '-s', type=str, required=True, help="Solutions file.")
+    parser_eval.add_argument('--dir', '-d', type=str, required=True, help="Input directory.")
+    parser_eval.add_argument('--out', '-o', type=str, required=True, help="Output filename.")
+    parser_eval.set_defaults(which='eval')
+
     args = parser.parse_args(args)
 
     mct = OneClassMultipleChoiceTest(args.config)
-    mct.read(*args.files)
     
-    if args.number == 0:  # given problems
-        mct.generate_test_with_problems(1, json.loads(args.problems), args.out)
-    else:
-        mct.generate_tests(args.number, args.out, *json.loads(args.problems))
-        if args.merge:
-            mct._merge_pdfs(args.out, args.merge)
+#     print(args)
+    
+    if args.which == 'gen':
+        mct.read(*args.files)
+        
+        if args.number == 0:  # given problems
+            mct.generate_test_with_problems(1, json.loads(args.problems), args.out)
+        else:
+            mct.generate_tests(args.number, args.out, *json.loads(args.problems))
+            if args.merge:
+                mct._merge_pdfs(args.out, args.merge)
+    elif args.which == 'eval':
+        mct.load_solutions(args.solutions)
+        mct.evaluate_tests(args.dir, args.out)
         
 
 if __name__ == "__main__":
     main(sys.argv[1:])
 
-#     main("-h".split())
-    
-#     main("-c ./config.json -n 0 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p [[1,1],[1],[1]] -o ./ooo".split())
-#     main("-c ./config.json -n 0 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p [[1,1],[],[2]] -o ./ooo".split())
-#     main("-c ./config.json -n 1 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p [1,0,0] -o ./ooo".split())
-#     main("-c ./config.json -n 1 -f ./data_OK/t1.json ./data_OK/t2.json ./data_OK/t3.json -p [0,0,0] -o ./ooo".split())
-
 
 if __name__ == "__test__1":
-# if __name__ == "__main__":
     mct = OneClassMultipleChoiceTest('config.json')
     
     mct.read('data_OK/t1.json',
@@ -433,4 +578,10 @@ if __name__ == "__test__2":
     
     test_id = 100
     mct.generate_test_with_problems(test_id, [['2'], ['2'], ['2']], './ooo')
+
+if __name__ == "__test__3":
+    mct = OneClassMultipleChoiceTest('config.json')
+    
+    mct.load_solutions('./ooo/solutions.txt')
+    mct.evaluate_tests('./ooo', './ooo/eval.txt')
     
