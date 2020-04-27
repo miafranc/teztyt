@@ -1,6 +1,7 @@
 # teztyt
 
-Simple one-class multiple choice test generator in Python.
+Simple one-class multiple choice test generator in Python. 
+Automatic evaluation of saved filled-out forms is also possible.
 
 ## About
 
@@ -16,6 +17,9 @@ The databases containing the problems have to be in JSON format (see the __JSON 
 below). Since LaTeX is involved, math formulae and other LaTeX code can be used in the
 problem description (question and answers), but care should be taken in correctly escaping 
 the characters (e.g. `$x \\in \\{1,2,3\\}$`).
+
+Given an _evaluation scheme_, one can also automatically grade the filled-out and then saved PDF
+forms. 
 
 ## Command-line interface
 
@@ -100,8 +104,26 @@ file and 1 3-point problem from the last file (of course, there are other correc
 ## Evaluation
 
 It is possible to also evaluate the solved tests (see the `eval` sub-command above).
+The format of the output file produced is the following:
+```
+===
+ID: test_id
+Data from text boxes,
+each one in a new row.
+P: score obtained
+answers_1 / correct_answers_1
+[answers_2 / correct_answers_2
+...
+]
+===
+```
+where `answers_i` and `correct_answers_i` are lists containing the indices of the checked answers
+and of the correct answers, respectively.
 
-
+The evaluation scheme to be used can be set using the `evaluation` key in the config file. 
+The currently built-in schemes include all-or-nothing, proportional negative marking and proportional semi-negative marking
+(see the __Config file__ section below). It is also possible to define and use a new scheme setting `"evaluation": "my"`
+and giving the evaluation function as a Python lambda function in `evaluation_function`.
 
 ## Config file
 
