@@ -2,6 +2,8 @@
 
 Simple one-class multiple choice test generator in Python. 
 Automatic evaluation of saved filled-out forms is also possible.
+The generated tests can be used for online exams but can also
+be printed out.
 
 ## About
 
@@ -20,6 +22,9 @@ the characters (e.g. `$x \\in \\{1,2,3\\}$`).
 
 Given an _evaluation scheme_, one can also automatically grade the filled-out and then saved PDF
 forms. 
+
+The generated test can also be printed out for written exams. 
+The `merge` option and the `same_page_number` configuration field can be useful in this case.
 
 ## Command-line interface
 
