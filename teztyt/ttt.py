@@ -451,9 +451,7 @@ class OneClassMultipleChoiceTest:
         if self.config['evaluation'] == 'all':
             pass
         elif self.config['evaluation'] == 'negative':  # proportional negative marking
-            schema = lambda c, a, r, p: ((len(set(c).intersection(a)) - len(set(a).difference(c))) / float(len(a))) * p if len(a) > 0 else 0
-        elif self.config['evaluation'] == 'semi-negative':  # proportional semi-negative marking (?)
-            schema = lambda c, a, r, p: max(0, ((len(set(c).intersection(a)) - len(set(a).difference(c))) / float(len(a))) * p) if len(a) > 0 else 0
+            schema = lambda c, a, r, p: (max(0, len(c.intersection(a)) - len(a.difference(c))) / float(len(c))) * p
         elif self.config['evaluation'] == 'my':  # user-defined
             schema = eval(self.config['evaluation_function'])
         
@@ -465,7 +463,7 @@ class OneClassMultipleChoiceTest:
                                                                        and fields[x]['/V'] == self.NO, problem_keys)]
             correct_indices.append(correct_answers)
             checked_indices.append(checked_answers)
-            points += schema(correct_answers, checked_answers, rest_answers, float(problem_solution[problem_id][2]))
+            points += schema(set(correct_answers), set(checked_answers), set(rest_answers), float(problem_solution[problem_id][2]))
     
         return (test_id, {x:fields[x]['/V'] for x in text_keys}, points, correct_indices, checked_indices)
     
@@ -559,6 +557,7 @@ if __name__ == "__main__":
 
 
 if __name__ == "__test__1":
+# if __name__ == "__main__":
     mct = OneClassMultipleChoiceTest('config.json')
     
     mct.read('data_OK/t1.json',

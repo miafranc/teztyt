@@ -126,7 +126,7 @@ where `answers_i` and `correct_answers_i` are lists containing the indices of th
 and of the correct answers, respectively.
 
 The evaluation scheme to be used can be set using the `evaluation` key in the config file. 
-The currently built-in schemes include all-or-nothing, proportional negative marking and proportional semi-negative marking
+The currently built-in schemes include all-or-nothing and proportional negative marking 
 (see the __Config file__ section below). It is also possible to define and use a new scheme setting `"evaluation": "my"`
 and giving the evaluation function as a Python lambda function in `evaluation_function`.
 
@@ -166,13 +166,12 @@ because of the maximum number of pages constraint).
 anywhere in the body of the problems as `%figures_dir%`.
 * `evaluation`: Type of evaluation. Three evaluation schemes are defined:
   * `all`: All-or-nothing scheme: The points are given if and only if all the correct answers are checked.
-  * `negative`: Proportional negative marking: Incorrect answers are also graded by negative scores. The score is calculated as `((|C /\ A| - |A - C|) / |A|) * p`, where `C` denotes the set of correct answers, `A` is the set of the answers given and `p` is the points assigned to the problem.
-  * `semi-negative`: Proportional semi-negative marking: Incorrect answers are also graded by negative scores, but scores obtained for a problem always positive. The score is calculated as `max(0, ((|C /\ A| - |A - C|) / |A|) * p)`, where `C` denotes the set of correct answers, `A` is the set of the answers given and `p` is the points assigned to the problem.
+  * `negative`: Proportional negative marking: Incorrect answers are also graded by negative scores. The score is calculated as `(max(0, |C /\ A| - |A - C|) / |C|) * p`, where `C` denotes the set of correct answers, `A` is the set of the answers given and `p` is the points assigned to the problem (`/\` denotes intersection). Thus, this scheme punishes incorrect answers by subtracting the number of wrong answers from the number of correct answers given. Because of the `max` it will not result in negative scores (therefore semi- or quasi-negative marking would probably be a better name for it). It is proportional, because the difference of correct - incorrect answers is divided by the number of correct answers.
   * `my`: User-defined evaluation scheme. In this case the evaluation is performed evaluating the Python lambda function given by `evaluation_function` (see below).
 * `evaluation_function`: The lambda evaluation function having the following 4 parameters: `c`, `a`, `r`, `p`:
-  * `c`: List of correct answers.
-  * `a`: List of the checked answers.
-  * `r`: List of the remaining (unchecked) answers.
+  * `c`: Set of correct answers.
+  * `a`: Set of the checked answers.
+  * `r`: Set of the remaining (unchecked) answers.
   * `p`: Points.  
 
 ## Requirements
