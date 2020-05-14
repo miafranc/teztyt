@@ -42,6 +42,18 @@ class OneClassMultipleChoiceTest:
         self.NO = '/Off'
         
     @staticmethod
+    def _check_duplicate_keys(fname, ordered_pairs):
+        """Checking for duplicate keys
+        """
+        d = {}
+        for k, v in ordered_pairs:
+            if k in d:
+                raise Exception('Duplicate keys: {} ({})'.format(k, fname))
+            else:
+                d[k] = v
+        return d
+        
+    @staticmethod
     def _load_json(json_filename):
         """Returns the content of a JSON file.
         
@@ -52,7 +64,7 @@ class OneClassMultipleChoiceTest:
             dict: JSON as a dictionary.
         """
         f = codecs.open(json_filename, 'r', 'utf-8')
-        data = json.load(f)
+        data = json.load(f, object_pairs_hook=lambda pairs: OneClassMultipleChoiceTest._check_duplicate_keys(json_filename, pairs))
         f.close()
         return data
     
@@ -233,7 +245,10 @@ class OneClassMultipleChoiceTest:
         prologue += '}'
         
         prologue += '\n\\date{}\\author{}\n\n'
-        
+
+        prologue += '\\usepackage[absolute]{textpos}'
+        prologue += '\\usepackage{color}'
+
         prologue += '\\usepackage{hyperref}\n'
         prologue += '\\newcommand\\checkBoxHref[1]{\\mbox{\\CheckBox[width=3mm, height=3mm, checkboxsymbol=\\ding{110}, bordercolor=0 0 0]{#1}}}\n'
         prologue += '\\renewcommand\\LayoutCheckField[2]{#2}\n\n'
@@ -242,6 +257,9 @@ class OneClassMultipleChoiceTest:
         prologue += '\\newcounter{{fel}}\n\\newtheorem{{problem}}[fel]{{{}}}\n'.format(self.config['newtheorem_string'])  # "built-in"/default problem environment
         prologue += '\\renewcommand{{\\baselinestretch}}{{{}}}\n\n'.format(self.config['baselinestretch'])
         prologue += '\\begin{document}\n\n\\maketitle\\sloppy\n\n'
+        
+        prologue += '\\setlength{\TPHorizModule}{\\paperwidth}\\setlength{\TPVertModule}{\\paperheight}\\TPMargin{0pt}\n'
+        prologue += '\\begin{textblock}{1}(0,0.99){\\color{gray}\\tiny\\texttt{c\\;r\\;e\\;a\\;t\\;e\\;d~~w\\;i\\;t\\;h~~t\\;e\\;z\\;t\\;y\\;t}}\\end{textblock}\n'
         
         # prologue += '\\begin{Form}[action={}]\n\n'
         prologue += '\\begin{Form}\n\n'

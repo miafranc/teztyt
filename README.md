@@ -164,7 +164,7 @@ problem_index (data_file_index/problem_key/points): correct_answer_index_1 [, co
 because of the maximum number of pages constraint).
 * `figures_dir`: Folder of the external data used in the problems (e.g. images, tikz, etc.). The path can be used
 anywhere in the body of the problems as `%figures_dir%`.
-* `evaluation`: Type of evaluation. Three evaluation schemes are defined:
+* `evaluation`: Type of evaluation. Three evaluation schemes are defined (two + user-defined):
   * `all`: All-or-nothing scheme: The points are given if and only if all the correct answers are checked.
   * `negative`: Proportional negative marking: Incorrect answers are also graded by negative scores. The score is calculated as `(max(0, |C /\ A| - |A - C|) / |C|) * p`, where `C` denotes the set of correct answers, `A` is the set of the answers given and `p` is the points assigned to the problem (`/\` denotes intersection). Thus, this scheme punishes incorrect answers by subtracting the number of wrong answers from the number of correct answers given. Because of the `max` it will not result in negative scores (therefore semi- or quasi-negative marking would probably be a better name for it). It is proportional, because the difference of correct - incorrect answers is divided by the number of correct answers.
   * `my`: User-defined evaluation scheme. In this case the evaluation is performed evaluating the Python lambda function given by `evaluation_function` (see below).
@@ -182,6 +182,8 @@ anywhere in the body of the problems as `%figures_dir%`.
 * LaTeX distribution with pdflatex
   * extsizes https://ctan.org/pkg/extsizes
   * hyperref https://ctan.org/pkg/hyperref
+  * textpos https://www.ctan.org/pkg/textpos
+  * color https://www.ctan.org/pkg/color
 
 ## API
 
