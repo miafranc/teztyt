@@ -246,9 +246,6 @@ class OneClassMultipleChoiceTest:
         
         prologue += '\n\\date{}\\author{}\n\n'
 
-        prologue += '\\usepackage[absolute]{textpos}'
-        prologue += '\\usepackage{color}'
-
         prologue += '\\usepackage{hyperref}\n'
         prologue += '\\newcommand\\checkBoxHref[1]{\\mbox{\\CheckBox[width=3mm, height=3mm, checkboxsymbol=\\ding{110}, bordercolor=0 0 0]{#1}}}\n'
         prologue += '\\renewcommand\\LayoutCheckField[2]{#2}\n\n'
@@ -257,9 +254,6 @@ class OneClassMultipleChoiceTest:
         prologue += '\\newcounter{{fel}}\n\\newtheorem{{problem}}[fel]{{{}}}\n'.format(self.config['newtheorem_string'])  # "built-in"/default problem environment
         prologue += '\\renewcommand{{\\baselinestretch}}{{{}}}\n\n'.format(self.config['baselinestretch'])
         prologue += '\\begin{document}\n\n\\maketitle\\sloppy\n\n'
-        
-        prologue += '\\setlength{\TPHorizModule}{\\paperwidth}\\setlength{\TPVertModule}{\\paperheight}\\TPMargin{0pt}\n'
-        prologue += '\\begin{textblock}{1}(0,0.99){\\color{gray}\\tiny\\texttt{c\\;r\\;e\\;a\\;t\\;e\\;d~~w\\;i\\;t\\;h~~t\\;e\\;z\\;t\\;y\\;t}}\\end{textblock}\n'
         
         # prologue += '\\begin{Form}[action={}]\n\n'
         prologue += '\\begin{Form}\n\n'

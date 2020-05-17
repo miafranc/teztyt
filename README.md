@@ -182,8 +182,6 @@ anywhere in the body of the problems as `%figures_dir%`.
 * LaTeX distribution with pdflatex
   * extsizes https://ctan.org/pkg/extsizes
   * hyperref https://ctan.org/pkg/hyperref
-  * textpos https://www.ctan.org/pkg/textpos
-  * color https://www.ctan.org/pkg/color
 
 ## API
 
