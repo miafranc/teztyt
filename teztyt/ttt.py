@@ -469,10 +469,13 @@ class OneClassMultipleChoiceTest:
         
         for problem_id in problem_solution.keys():
             correct_answers = problem_solution[problem_id][3]
+            # In some cases (e.g. using Acrobat Reader in Windows, version 2019.012.20040) it happens, that the '/V' fields becomes missing if a checkbox is not checked.
+            # (This is why '/V' is checked if it exists.)
             checked_answers = [x[str.rindex(x, ':') + 1:] for x in filter(lambda x: x.startswith('{}:{}'.format(test_id, problem_id)) 
+                                                                          and fields[x].get('/V', -1) != -1 
                                                                           and fields[x]['/V'] == self.YES, problem_keys)]
             rest_answers = [x[str.rindex(x, ':') + 1:] for x in filter(lambda x: x.startswith('{}:{}'.format(test_id, problem_id)) 
-                                                                       and fields[x]['/V'] == self.NO, problem_keys)]
+                                                                       and (fields[x].get('/V', -1) == -1 or fields[x]['/V'] == self.NO), problem_keys)]
             correct_indices.append(correct_answers)
             checked_indices.append(checked_answers)
             points += schema(set(correct_answers), set(checked_answers), set(rest_answers), float(problem_solution[problem_id][2]))
@@ -493,7 +496,8 @@ class OneClassMultipleChoiceTest:
         Returns:
             str: Generated report.
         """
-        report = 'ID: {}\n{}\nP: {}\n'.format(test_id, '\n'.join(text_data.values()), points)
+        # Sometimes it happens that a string becomes a byte string (in case of text fields).
+        report = 'ID: {}\n{}\nP: {}\n'.format(test_id, '\n'.join([str(v) for v in text_data.values()]), points)
 #         report += 'ANSWERS / CORRECT ANSWERS:\n'
         for i in range(len(checked_indices)):
             report += str(i+1) + ' ' + str(checked_indices[i]) + ' / ' + str(correct_indices[i]) + '\n'
@@ -511,8 +515,11 @@ class OneClassMultipleChoiceTest:
         for f in sorted(listdir(in_dir)):
             fname = join(in_dir, f)
             if isfile(fname) and regex.match('^.*\.pdf$', f, flags=regex.IGNORECASE):
-                (test_id, text_data, points, correct_indices, checked_indices) = self.evaluate_test(fname)
-                reports.append(self.generate_report(test_id, text_data, points, correct_indices, checked_indices))
+                try:
+                    (test_id, text_data, points, correct_indices, checked_indices) = self.evaluate_test(fname)
+                    reports.append(self.generate_report(test_id, text_data, points, correct_indices, checked_indices))
+                except:
+                    print('ERROR ({}): {}'.format(fname, str(sys.exc_info())))
         fout = codecs.open(out_file, 'w', 'utf-8')
         fout.write(self.text_separator + self.text_separator.join(reports) + self.text_separator)
         fout.close()
