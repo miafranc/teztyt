@@ -496,7 +496,7 @@ class OneClassMultipleChoiceTest:
         report = 'ID: {}\n{}\nP: {}\n'.format(test_id, '\n'.join(text_data.values()), points)
 #         report += 'ANSWERS / CORRECT ANSWERS:\n'
         for i in range(len(checked_indices)):
-            report += str(checked_indices[i]) + ' / ' + str(correct_indices[i]) + '\n'
+            report += str(i+1) + ' ' + str(checked_indices[i]) + ' / ' + str(correct_indices[i]) + '\n'
         return report
 
     def evaluate_tests(self, in_dir, out_file):
