@@ -53,9 +53,11 @@ optional arguments:
                         Data files. E.g. '-f d1.json d2.json d3.json'
   --problems PROBLEMS, -p PROBLEMS
                         Number of problems to generate from each file in form
-                        of a list. E.g. '-p [3, 2, 1]'. If '-n 0' is used
-                        (test generation using given problems), this list must
-                        contain lists, e.g. [[1], [1,2], [5]].
+                        of a list. E.g. '-p [3,2,1]'. If '-n 0' is used (test
+                        generation using given problems), this list must
+                        contain lists, e.g. [[1],[1,2],[5]]. Spaces are not
+                        allowed in the above form, only if using aposthrophes
+                        or quotes, e.g. "[1, 2, 3]".
   --out OUT, -o OUT     Output directory.
   --merge MERGE, -m MERGE
                         Optional, the name of the merged tests' file.
@@ -144,7 +146,7 @@ and giving the evaluation function as a Python lambda function in `evaluation_fu
 * `prologue`: In case other packages or settings are needed.
 * `name_and_stuff`: Name and other text fields to appear at the beginning of the document; array containing the corresponding strings.
 * `name_and_stuff_widths`: Widths of the text fields; array of the same size as `name_and_stuff`.
-* `newtheorem_string`: Name of the problems, e.g. `"Problem"`.
+* `newtheorem_string`: Name/title of the problems, e.g. `"Problem"`.
 * `problem_environment`: The LaTeX environment used for the problems. The built-in `problem` environment is recommended.
 * `out_file_prefix`: Name prefix of generated files containing the tests.
 * `solutions_file`: Name of the text file with the solutions. Format of its content: 

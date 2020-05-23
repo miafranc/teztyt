@@ -536,9 +536,11 @@ def main(args):
     parser_gen.add_argument('--number', '-n', type=int, required=True, help="Number of tests to generate.")
     parser_gen.add_argument('--files', '-f', type=str, nargs='+', required=True, help="Data files. E.g. '-f d1.json d2.json d3.json'")
     parser_gen.add_argument('--problems', '-p', type=str, required=True, 
-                        help="""Number of problems to generate from each file in form of a list. E.g. '-p [3, 2, 1]'.
+                        help="""Number of problems to generate from each file in form of a list. E.g. '-p [3,2,1]'.
                                 If '-n 0' is used (test generation using given problems), this list must contain
-                                lists, e.g. [[1], [1,2], [5]].""")
+                                lists, e.g. [[1],[1,2],[5]].
+                                Spaces are not allowed in the above form, only if using aposthrophes or quotes,
+                                e.g. "[1, 2, 3]".""")
     parser_gen.add_argument('--out', '-o', type=str, required=True, help="Output directory.")
     parser_gen.add_argument('--merge', '-m', type=str, required=False, help="Optional, the name of the merged tests' file.")
     parser_gen.set_defaults(which='gen')
