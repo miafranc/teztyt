@@ -9,6 +9,11 @@ from os.path import join, isfile
 from os import listdir
 import argparse
 import sys
+import yaml
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
 
 import regex
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
@@ -29,7 +34,10 @@ class OneClassMultipleChoiceTest:
         Parameters:
             config_file (str): Path to the JSON configuration file.
         """
-        self.config = self._load_json(config_file)
+        self.config_type = 'yaml'
+        if config_file.endswith('.json'):
+            self.config_type = 'json'
+        self.config = self._load_yaml(config_file)  # can handle json too
         self.data = []
         
         self.solutions = {}
@@ -52,7 +60,26 @@ class OneClassMultipleChoiceTest:
             else:
                 d[k] = v
         return d
-        
+
+    class UniqueKeyLoader(Loader):
+        """From: https://gist.github.com/pypt/94d747fe5180851196eb
+        """
+        def construct_mapping(self, node, deep=False):
+            mapping = []
+            for key_node, value_node in node.value:
+                key = self.construct_object(key_node, deep=deep)
+                if key in mapping:
+                    raise Exception('Duplicate keys: {}'.format(key))
+                mapping.append(key)
+            return super().construct_mapping(node, deep)
+    
+    @staticmethod
+    def _load_yaml(yaml_filename):
+        f = codecs.open(yaml_filename, 'r', 'utf-8')
+        data = yaml.load(f, Loader=OneClassMultipleChoiceTest.UniqueKeyLoader)
+        f.close()
+        return data
+
     @staticmethod
     def _load_json(json_filename):
         """Returns the content of a JSON file.
@@ -236,7 +263,10 @@ class OneClassMultipleChoiceTest:
         """
         prologue = '\\documentclass[{}pt,oneside,{}]{{extarticle}}\n'.format(self.config['fontsize'], 
                                                                              self.config['columns'])
-        prologue += '\n'.join(self.config['prologue']) + '\n\n'
+        if self.config_type == 'json':
+            prologue += '\n'.join(self.config['prologue']) + '\n\n'
+        else:
+            prologue += '\n' + self.config['prologue'] + '\n\n'
         
         prologue += '\\title{{{}\\\\\n'.format(self.config['title'])
         if self.config['subtitle'] != '':
@@ -575,33 +605,3 @@ def main(args):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
-
-if __name__ == "__test__1":
-# if __name__ == "__main__":
-    mct = OneClassMultipleChoiceTest('config.json')
-    
-    mct.read('data_OK/t1.json',
-             'data_OK/t2.json',
-             'data_OK/t3.json')
-
-    mct.generate_tests(2, 'gen', 2, 4, 2)
-    mct._merge_pdfs('gen', 'gen/all.pdf')
-
-    
-if __name__ == "__test__2":
-    mct = OneClassMultipleChoiceTest('config.json')
-    
-    mct.read('data_OK/t1.json',
-             'data_OK/t2.json',
-             'data_OK/t3.json')
-    
-    test_id = 100
-    mct.generate_test_with_problems(test_id, [['2'], ['2'], ['2']], './ooo')
-
-if __name__ == "__test__3":
-    mct = OneClassMultipleChoiceTest('config.json')
-    
-    mct.load_solutions('./ooo/solutions.txt')
-    mct.evaluate_tests('./ooo', './ooo/eval.txt')
-    
