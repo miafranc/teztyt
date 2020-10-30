@@ -42,10 +42,6 @@ class OneClassMultipleChoiceTest:
         
         self.solutions = {}
         
-        self.solution_regex = regex.compile(r'(\d+) \((\d+)/(\d+)/(\d+)\): (\d+(, \d+)*)')
-        self.solution_format = '{} ({}/{}/{}): {}'
-        self.text_separator = '===\n'
-        
         self.YES = '/Yes'
         self.NO = '/Off'
         
@@ -66,7 +62,7 @@ class OneClassMultipleChoiceTest:
         """
         def construct_mapping(self, node, deep=False):
             mapping = []
-            for key_node, value_node in node.value:
+            for key_node, value_node in node.value:  # pylint: disable=unused-variable 
                 key = self.construct_object(key_node, deep=deep)
                 if key in mapping:
                     raise Exception('Duplicate keys: {}'.format(key))
@@ -74,11 +70,37 @@ class OneClassMultipleChoiceTest:
             return super().construct_mapping(node, deep)
     
     @staticmethod
-    def _load_yaml(yaml_filename):
+    def _load_yaml(yaml_filename, load_all=False):
+        """Returns the content of a YAML file.
+        
+        Parameters:
+            yaml_filename (str): Path to the filename.
+        
+        Returns:
+            data: Data read from file in a Python data structure.
+        """
         f = codecs.open(yaml_filename, 'r', 'utf-8')
-        data = yaml.load(f, Loader=OneClassMultipleChoiceTest.UniqueKeyLoader)
+        if load_all:
+            data = list(yaml.load_all(f, Loader=OneClassMultipleChoiceTest.UniqueKeyLoader))
+        else:
+            data = yaml.load(f, Loader=OneClassMultipleChoiceTest.UniqueKeyLoader)
         f.close()
         return data
+
+    @staticmethod
+    def _dump_yaml(yaml_filename, data, dump_all=False):
+        """Dumps the content of a YAML file.
+        
+        Parameters:
+            yaml_filename (str): Path to the filename.
+        """
+        f = codecs.open(yaml_filename, 'w', 'utf-8')
+        if dump_all:
+#             yaml.dump_all(data, f, Dumper=Dumper, indent=2, default_flow_style=False)
+            yaml.dump_all(data, f, Dumper=Dumper, indent=2)
+        else:
+            yaml.dump(data, f, Dumper=Dumper, indent=2)
+        f.close()
 
     @staticmethod
     def _load_json(json_filename):
@@ -101,10 +123,24 @@ class OneClassMultipleChoiceTest:
         
         Parameters:
             *filenames (strs): Paths to the JSON data files.
+        
+        (The format of the YAML file slightly differs from the JSON: in JSON there is one dictionary
+        containing all the problems, while in YAML each document (dictionary) represent one document.)
         """
         self.data = []
         for f in filenames:
-            self.data.append(self._load_json(f))
+            if f.endswith('.json'):  # JSON
+                self.data.append(self._load_json(f))
+            elif f.endswith('.yaml'):  # YAML
+                data = self._load_yaml(f, load_all=True)
+                ddata = {}
+                for d in data:
+                    if len(d.keys()) > 1:
+                        raise Exception('Wrong YAML format: more than one problem in one document!')
+                    if list(d.keys())[0] in ddata.keys():
+                        raise Exception('Duplicate keys: {} ({})'.format(list(d.keys())[0], f))
+                    ddata.update(d)
+                self.data.append(ddata)
 
     def generate_tests(self, num_tests, out_dir, *num_problems):
         """Generates a given a number of tests and outputs the generated PDF
@@ -139,9 +175,7 @@ class OneClassMultipleChoiceTest:
             
             solutions.append(sol)
             
-        f = codecs.open(join(out_dir, self.config['solutions_file']), 'w', 'utf-8')
-        f.write(self.text_separator + self.text_separator.join(solutions) + self.text_separator)
-        f.close()
+        self._dump_yaml(join(out_dir, self.config['solutions_file']), solutions, dump_all=True)
 
     def generate_test(self, test_id, *num_problems):
         """Generates a test with a given `test_id` containing `num_problems`
@@ -163,7 +197,7 @@ class OneClassMultipleChoiceTest:
         problem_num = 0
         
         test_code = ''
-        test_solution = ''
+        test_solution = {}
         
         for i in range(len(num_problems)):
             if num_problems[i] > len(all_keys[i]):
@@ -178,10 +212,10 @@ class OneClassMultipleChoiceTest:
                 code = self._generate_code(test_id, problem_num, i, k, answers)
                 sol = self._generate_solution(problem_num, i, k, answers, self.data[i][k]['P'])
                 test_code += code
-                test_solution += sol
+                test_solution.update(sol)
         
         test_code = self._generate_code_prologue(test_id) + test_code + self._generate_code_epilogue()
-        test_solution = str(test_id) + ':\n' + test_solution
+        test_solution = {test_id: test_solution}
         
         return (test_code, test_solution)
 
@@ -203,7 +237,7 @@ class OneClassMultipleChoiceTest:
         problem_num = 0
         
         test_code = ''
-        test_solution = ''
+        test_solution = {}
         
         for i in range(len(problems)):
             for k in problems[i]:
@@ -212,16 +246,15 @@ class OneClassMultipleChoiceTest:
                 code = self._generate_code(test_id, problem_num, i, str(k), answers)
                 sol = self._generate_solution(problem_num, i, str(k), answers, self.data[i][str(k)]['P'])
                 test_code += code
-                test_solution += sol
-            
-        test_code = self._generate_code_prologue(test_id) + test_code + self._generate_code_epilogue()
-        test_solution = self.text_separator + str(test_id) + ':\n' + test_solution + self.text_separator
+                test_solution.update(sol)
         
+        test_code = self._generate_code_prologue(test_id) + test_code + self._generate_code_epilogue()
+        test_solution = [{test_id: test_solution}]
+
         self._write_latex(test_id, test_code, out_dir)
         self._compile_latex(test_id, out_dir)
-        f = codecs.open(join(out_dir, self.config['solutions_file']), 'w', 'utf-8')
-        f.write(test_solution)
-        f.close()
+        
+        self._dump_yaml(join(out_dir, self.config['solutions_file']), test_solution, dump_all=True)
 
     def _generate_code(self, test_id, problem_num, i, k, answers):
         """Generates LaTeX code for a given test problem.
@@ -316,14 +349,15 @@ class OneClassMultipleChoiceTest:
             answers (list of strs): Shuffled keys of the problem.
             
         Returns:
-            str: Text describing the solution of a given problem.
+            dict: Dictionary describing the information about a problem,
+                  including the correct answers (see the return statement below).
         """
         corr_ans = []
         for ind, a in enumerate(answers):
             if regex.match(self.config['correct_key_match'], a):
-                corr_ans.append(str(ind + 1))
+                corr_ans.append(ind + 1)
         
-        return (self.solution_format + '\n').format(problem_num, i + 1, k, points, ', '.join(corr_ans))
+        return {problem_num: [[i+1, k, points], corr_ans]}
     
     def _shuffle_answers(self, problem):
         """Shuffles the answers of a given problem.
@@ -439,28 +473,17 @@ class OneClassMultipleChoiceTest:
             fname (str): Path to solutions file.
         
         Returns:
-            dict: Solutions in a dict: {test_id: {problem_id: [datafile_index, problem_key, problem_points, [correct_answer_index1, correct_answer_index2, ...]], ... } ... }
+            dict: Solutions in a dict: {test_id: {problem_id: [[datafile_index, problem_key, problem_points], [correct_answer_index1, correct_answer_index2, ...]], ... } ... }
                   (Also sets `self.solutions`)
         """
-        f = codecs.open(fname, 'r', 'utf-8')
-        data = f.read()
-        f.close()
+        solutions = self._load_yaml(fname, load_all=True)
         
-        tests = filter(None, regex.split(self.text_separator, data))
+        sols = {}
+        for s in solutions:
+            sols.update(s)
         
-        solutions = {}
-
-        for t in tests:
-            problems = list(filter(None, regex.split(r'\n', t)))
-            test_id = regex.match(r'(\d+):', problems[0]).group(1)
-            solutions[test_id] = {}
-            for p in problems[1:]:
-                m = regex.match(self.solution_regex, p)
-                problem_id, datafile_index, problem_key, problem_points, right_answer_index = m.group(1), m.group(2), m.group(3), m.group(4), regex.split(', ', m.group(5))
-                solutions[test_id][problem_id] = [datafile_index, problem_key, problem_points, right_answer_index]
-        
-        self.solutions = solutions
-        return solutions
+        self.solutions = sols
+        return sols
 
     def evaluate_test(self, fname):
         """Evaluate a test (a PDF file) given a solution file and an evaluation scheme.
@@ -481,7 +504,7 @@ class OneClassMultipleChoiceTest:
         all_keys = list(fields.keys())
         problem_keys = list(filter(lambda x: x[0] != 't', all_keys))
         text_keys = list(filter(lambda x: x[0] == 't', all_keys))
-        test_id = problem_keys[0][:problem_keys[0].index(':')]
+        test_id = int(problem_keys[0][:problem_keys[0].index(':')])
         
         problem_solution = self.solutions[test_id]
         
@@ -498,17 +521,17 @@ class OneClassMultipleChoiceTest:
             schema = eval(self.config['evaluation_function'])
         
         for problem_id in problem_solution.keys():
-            correct_answers = problem_solution[problem_id][3]
+            correct_answers = problem_solution[problem_id][1]
             # In some cases (e.g. using Acrobat Reader in Windows, version 2019.012.20040) it happens, that the '/V' fields becomes missing if a checkbox is not checked.
             # (This is why '/V' is checked if it exists.)
-            checked_answers = [x[str.rindex(x, ':') + 1:] for x in filter(lambda x: x.startswith('{}:{}'.format(test_id, problem_id)) 
+            checked_answers = [int(x[str.rindex(x, ':') + 1:]) for x in filter(lambda x: x.startswith('{}:{}'.format(test_id, problem_id)) 
                                                                           and fields[x].get('/V', -1) != -1 
                                                                           and fields[x]['/V'] == self.YES, problem_keys)]
-            rest_answers = [x[str.rindex(x, ':') + 1:] for x in filter(lambda x: x.startswith('{}:{}'.format(test_id, problem_id)) 
+            rest_answers = [int(x[str.rindex(x, ':') + 1:]) for x in filter(lambda x: x.startswith('{}:{}'.format(test_id, problem_id)) 
                                                                        and (fields[x].get('/V', -1) == -1 or fields[x]['/V'] == self.NO), problem_keys)]
             correct_indices.append(correct_answers)
             checked_indices.append(checked_answers)
-            points += schema(set(correct_answers), set(checked_answers), set(rest_answers), float(problem_solution[problem_id][2]))
+            points += schema(set(correct_answers), set(checked_answers), set(rest_answers), float(problem_solution[problem_id][0][2]))
     
         return (test_id, {x:fields[x]['/V'] for x in text_keys}, points, correct_indices, checked_indices)
     
@@ -524,15 +547,19 @@ class OneClassMultipleChoiceTest:
             checked_indices (list of strs): List of checked indices.
         
         Returns:
-            str: Generated report.
+            dict: Generated report.
         """
         # Sometimes it happens that a string becomes a byte string (in case of text fields).
-        report = 'ID: {}\n{}\nP: {}\n'.format(test_id, '\n'.join([str(v) for v in text_data.values()]), points)
-#         report += 'ANSWERS / CORRECT ANSWERS:\n'
+        report = {test_id: {}}
+        for t in text_data.keys():
+            report[test_id]['_' + str(t)] = str(text_data[t])  # prefix '_' added to appear at the beginning in the output
+        report[test_id]['ans'] = {}
         for i in range(len(checked_indices)):
-            report += str(i+1) + ' ' + str(checked_indices[i]) + ' / ' + str(correct_indices[i]) + '\n'
+            report[test_id]['ans'][i+1] = [checked_indices[i], correct_indices[i]]
+        report[test_id]['points'] = points
+        
         return report
-
+    
     def evaluate_tests(self, in_dir, out_file):
         """Evaluates test PDFs from a given input directory and writes out the evaluation report.
         Solutions have to be loaded first.
@@ -550,9 +577,8 @@ class OneClassMultipleChoiceTest:
                     reports.append(self.generate_report(test_id, text_data, points, correct_indices, checked_indices))
                 except:
                     print('ERROR ({}): {}'.format(fname, str(sys.exc_info())))
-        fout = codecs.open(out_file, 'w', 'utf-8')
-        fout.write(self.text_separator + self.text_separator.join(reports) + self.text_separator)
-        fout.close()
+        
+        self._dump_yaml(out_file, reports, dump_all=True)
     
 
 def main(args):
@@ -601,7 +627,7 @@ def main(args):
     elif args.which == 'eval':
         mct.load_solutions(args.solutions)
         mct.evaluate_tests(args.dir, args.out)
-        
 
+        
 if __name__ == "__main__":
     main(sys.argv[1:])
