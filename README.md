@@ -13,12 +13,13 @@ in _fillable PDF_ format.
 
 The program generates LaTeX code, which is in turn compiled to PDF, 
 therefore Python and a LaTeX distribution is needed in order to be able to use it
-(see the __Requirements__ section below).
+(see the [Requirements](#requirements) section below).
 
-The databases containing the problems have to be in JSON format (see the __JSON file format__ section
+The databases containing the problems have to be in JSON or YAML formats (see the [JSON and YAML file formats](#json-and-yaml-file-formats) section
 below). Since LaTeX is involved, math formulae and other LaTeX code can be used in the
 problem description (question and answers), but care should be taken in correctly escaping 
-the characters (e.g. `$x \\in \\{1,2,3\\}$`).
+the characters (e.g. `$x \\in \\{1,2,3\\}$`) when using JSON. YAML, although not developed
+for this purpose, is more comfortable: no LaTeX escaping is needed, has multi-line string and commenting support.
 
 Given an _evaluation scheme_, one can also automatically grade the filled-out and then saved PDF
 forms. 
@@ -50,7 +51,7 @@ optional arguments:
   --number NUMBER, -n NUMBER
                         Number of tests to generate.
   --files FILES [FILES ...], -f FILES [FILES ...]
-                        Data files. E.g. '-f d1.json d2.json d3.json'
+                        Data files. E.g. '-f d1.yaml d2.json d3.json'
   --problems PROBLEMS, -p PROBLEMS
                         Number of problems to generate from each file in form
                         of a list. E.g. '-p [3,2,1]'. If '-n 0' is used (test
@@ -76,9 +77,9 @@ optional arguments:
   --out OUT, -o OUT     Output filename.
 ```
 
-## JSON file format
+## JSON and YAML file formats
 
-The input file format containing the problems has to be the following:
+The JSON file format containing the problems is the following:
 ```
 {
 	"unique_integer_problem_key": {
@@ -94,13 +95,28 @@ The input file format containing the problems has to be the following:
 ...
 }
 ```
+Similarly, the YAML file format is as follows:
+```
+unique_integer_problem_key:
+	P: points
+	Q: Question?
+	A:
+		a1: |
+			1st correct
+			answer.
+		a2: 2nd correct answer.
+		b: 3rd answer.
+		c: 4th answer.
+---
+...
+```
 The dictionary with key `"A"` can contain an arbitrary number of possible answers.
 The keys are important here: all answers are considered to be correct
 if the regexp `correct_key_match` (see below) matches it (in this case `"^a.*"`). 
 
 One can create separate data files storing _different_ problems. For example, usually
 one would like to generate a set of problems totaling to a given number of points (e.g. 10).
-In order to do this efficiently, one can create separate JSON files grouping
+In order to do this efficiently, one can create separate JSON/YAML files grouping
 problems having the same difficulty, and consequently the same points.
 
 __Example__: Suppose we have 3 files: one with 1-point, another one with 2-point and a third one
