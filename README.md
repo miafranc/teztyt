@@ -1,24 +1,24 @@
 # teztyt
 
-Simple one-class multiple choice test generator in Python. 
+Simple one-class multiple choice test/quiz generator in Python. 
 Automatic evaluation of saved filled-out forms is also possible.
 The generated tests can be used for online exams but can also
 be printed out.
 
 ## About
 
-__teztyt__ is a very simple _multiple choice test_ generator written in Python.
+__teztyt__ is a simple _multiple choice test_ generator written in Python.
 It has a simple command-line interface by which _random tests_ can be generated 
-in _fillable PDF_ format. 
+in _fillable PDF_ format.
 
 The program generates LaTeX code, which is in turn compiled to PDF, 
-therefore Python and a LaTeX distribution is needed in order to be able to use it
+therefore Python and a LaTeX distribution is needed in order to be able to use it 
 (see the [Requirements](#requirements) section below).
 
-The databases containing the problems have to be in JSON or YAML formats (see the [JSON and YAML file formats](#json-and-yaml-file-formats) section
+The databases containing the problems have to be in JSON or YAML formats (see the [JSON and YAML data file formats](#json-and-yaml-data-file-formats) section
 below). Since LaTeX is involved, math formulae and other LaTeX code can be used in the
 problem description (question and answers), but care should be taken in correctly escaping 
-the characters (e.g. `$x \\in \\{1,2,3\\}$`) when using JSON. YAML, although not developed
+the characters when using JSON (e.g. `$x \\in \\{1,2,3\\}$`). YAML, although not developed
 for this purpose, is more comfortable: no LaTeX escaping is needed, has multi-line string and commenting support.
 
 Given an _evaluation scheme_, one can also automatically grade the filled-out and then saved PDF
@@ -77,7 +77,7 @@ optional arguments:
   --out OUT, -o OUT     Output filename.
 ```
 
-## JSON and YAML file formats
+## JSON and YAML data file formats
 
 The JSON file format containing the problems is the following:
 ```
@@ -119,28 +119,38 @@ one would like to generate a set of problems totaling to a given number of point
 In order to do this efficiently, one can create separate JSON/YAML files grouping
 problems having the same difficulty, and consequently the same points.
 
-__Example__: Suppose we have 3 files: one with 1-point, another one with 2-point and a third one
-with 3-point problems. If one would like to generate a random test totaling to 10 points,
+__Example__: Suppose we have 3 files: one with 1-point, another one with 2-point, and a third one
+with 3-point problems. If one would like to generate a random test totaling 10 points,
 could simply get 3 1-point random problems from the first file, 2 2-point problems from the second
-file and 1 3-point problem from the last file (of course, there are other correct combinations).
+file, and 1 3-point problem from the last file (of course, there exist other correct combinations as well).
 
-## Evaluation
+## Solutions, evaluation
 
-It is possible to also evaluate the solved tests (see the `eval` sub-command above).
+In order to be able to (automatically) evaluate the filled-out PDFs, 
+the solutions (i.e. the correct answer(s) for every problem) need to be output.
+The solutions are output in YAML format as follows:
+```
+test_id:
+  problem_index:
+  - [input_file_index, problem_key, points]
+  - [indices_of_correct_answers]
+...
+```
+Evaluation of the solved tests can be done using the `eval` sub-command.
 The format of the output file produced is the following:
 ```
-===
-ID: test_id
-Data from text boxes,
-each one in a new row.
-P: score obtained
-answers_1 / correct_answers_1
-[answers_2 / correct_answers_2
+test_id:
+  text_field_1: value_1
+  text_field_2: value_2
+  ...
+  ans:
+    problem_index:
+    - [answers]
+    - [correct_answers]
+    ...
 ...
-]
-===
 ```
-where `answers_i` and `correct_answers_i` are lists containing the indices of the checked answers
+where `answers` and `correct_answers` are lists containing the indices of the checked answers
 and of the correct answers, respectively.
 
 The evaluation scheme to be used can be set using the `evaluation` key in the config file. 
@@ -165,15 +175,7 @@ and giving the evaluation function as a Python lambda function in `evaluation_fu
 * `newtheorem_string`: Name/title of the problems, e.g. `"Problem"`.
 * `problem_environment`: The LaTeX environment used for the problems. The built-in `problem` environment is recommended.
 * `out_file_prefix`: Name prefix of generated files containing the tests.
-* `solutions_file`: Name of the text file with the solutions. Format of its content: 
-```
-===
-test_id:
-problem_index (data_file_index/problem_key/points): correct_answer_index_1 [, correct_answer_index_2, ...]
-...
-===
-...
-```	
+* `solutions_file`: Name of the text file with the solutions.
 * `pdflatex`: Name of `pdflatex` executable (usually `"pdflatex"`).
 * `latex_parameters`: If additional parameters are needed; we use `"-interaction=batchmode"` to suppress messages (not the best solution though).
 * `max_pages`: Maximum number of pages a test can occupy.
