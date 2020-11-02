@@ -9,17 +9,15 @@ from os.path import join, isfile
 from os import listdir
 import argparse
 import sys
+
+import regex
+from PyPDF2.pdf import PdfFileReader, PdfFileWriter
+from PyPDF2.generic import BooleanObject, NameObject
 import yaml
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
 except ImportError:
     from yaml import Loader, Dumper
-
-import regex
-from PyPDF2.pdf import PdfFileReader, PdfFileWriter
-from PyPDF2.generic import BooleanObject, NameObject
-
-from pprint import pprint
 
 
 class OneClassMultipleChoiceTest:
@@ -512,13 +510,16 @@ class OneClassMultipleChoiceTest:
         correct_indices = []
         checked_indices = []
         
-        schema = lambda c, a, r, p: p if set(c) == set(a) else 0  # default: all-or-nothing scheme
-        if self.config['evaluation'] == 'all':
-            pass
+        if self.config['evaluation'] == 'regular': # regular (all-or-nothing) scheme
+            schema = lambda c, a, r, p: p if set(c) == set(a) else 0  # pylint: disable=unused-variable
         elif self.config['evaluation'] == 'negative':  # proportional negative marking
-            schema = lambda c, a, r, p: (max(0, len(c.intersection(a)) - len(a.difference(c))) / float(len(c))) * p
+            schema = lambda c, a, r, p: ((len(c.intersection(a)) - len(a.difference(c))) / float(len(c))) * p  # pylint: disable=unused-variable
+        elif self.config['evaluation'] == 'positive':  # error-retaliatory positive marking
+            schema = lambda c, a, r, p: (max(0, len(c.intersection(a)) - len(a.difference(c))) / float(len(c))) * p  # pylint: disable=unused-variable
         elif self.config['evaluation'] == 'my':  # user-defined
             schema = eval(self.config['evaluation_function'])
+        else:
+            raise Exception('Unknown evaluation scheme: {}'.format(self.config['evaluation']))
         
         for problem_id in problem_solution.keys():
             correct_answers = problem_solution[problem_id][1]
@@ -576,7 +577,7 @@ class OneClassMultipleChoiceTest:
                     (test_id, text_data, points, correct_indices, checked_indices) = self.evaluate_test(fname)
                     reports.append(self.generate_report(test_id, text_data, points, correct_indices, checked_indices))
                 except:
-                    print('ERROR ({}): {}'.format(fname, str(sys.exc_info())))
+                    print('ERROR ({}): {}'.format(fname, str(sys.exc_info())))  # do not raise exception, just report the error
         
         self._dump_yaml(out_file, reports, dump_all=True)
     

@@ -82,7 +82,7 @@ optional arguments:
 The JSON file format containing the problems is the following:
 ```
 {
-	"unique_integer_problem_key": {
+	"unique_problem_key": {
 		"P": points,
 		"Q": "Question?",
 		"A": {
@@ -97,7 +97,7 @@ The JSON file format containing the problems is the following:
 ```
 Similarly, the YAML file format is as follows:
 ```
-unique_integer_problem_key:
+unique_problem_key:
 	P: points
 	Q: Question?
 	A:
@@ -119,6 +119,9 @@ one would like to generate a set of problems totaling to a given number of point
 In order to do this efficiently, one can create separate JSON/YAML files grouping
 problems having the same difficulty, and consequently the same points.
 
+If using YAML, we recommend to use strings for the problem IDs, i.e. put the problem keys between
+quotation marks (because in case of JSON it is of type string).
+
 __Example__: Suppose we have 3 files: one with 1-point, another one with 2-point, and a third one
 with 3-point problems. If one would like to generate a random test totaling 10 points,
 could simply get 3 1-point random problems from the first file, 2 2-point problems from the second
@@ -137,7 +140,7 @@ test_id:
 ...
 ```
 Evaluation of the solved tests can be done using the `eval` sub-command.
-The format of the output file produced is the following:
+The format of the YAML output file produced is the following:
 ```
 test_id:
   text_field_1: value_1
@@ -186,19 +189,22 @@ because of the maximum number of pages constraint).
 anywhere in the body of the problems as `%figures_dir%`.
 * `evaluation`: Type of evaluation. Three evaluation schemes are defined (two + user-defined):
   * `all`: All-or-nothing scheme: The points are given if and only if all the correct answers are checked.
-  * `negative`: Proportional negative marking: Incorrect answers are also graded by negative scores. The score is calculated as `(max(0, |C /\ A| - |A - C|) / |C|) * p`, where `C` denotes the set of correct answers, `A` is the set of the answers given and `p` is the points assigned to the problem (`/\` denotes intersection). Thus, this scheme punishes incorrect answers by subtracting the number of wrong answers from the number of correct answers given. Because of the `max` it will not result in negative scores (therefore semi- or quasi-negative marking would probably be a better name for it). It is proportional, because the difference of correct - incorrect answers is divided by the number of correct answers.
+  * `negative`: Proportional negative marking: incorrect answers are also graded by negative scores. The score is calculated as `((|intersection(C, A)| - |A - C|) / |C|) * p`, where `C` denotes the set of correct answers, `A` is the set of the answers given, and `p` is the points assigned to the problem. Thus, this scheme punishes incorrect answers by subtracting the number of wrong answers from the number of correct answers given. It is proportional, the difference of correct - incorrect answers is divided by the number of correct answers.
+  * `positive`: Error-retaliatory positive marking: the same as the previous scheme, but because of the `max` function, the score will always be positive.
   * `my`: User-defined evaluation scheme. In this case the evaluation is performed evaluating the Python lambda function given by `evaluation_function` (see below).
 * `evaluation_function`: The lambda evaluation function having the following 4 parameters: `c`, `a`, `r`, `p`:
   * `c`: Set of correct answers.
   * `a`: Set of the checked answers.
   * `r`: Set of the remaining (unchecked) answers.
-  * `p`: Points.  
+  * `p`: Points.
+For example, `lambda c, a, r, p: ((len(c.intersection(a)) - len(a.difference(c))) / float(len(c))) * p` is equivalent to the proportional negative marking scheme discussed above.
 
 ## Requirements
 
 * Python 3.x (tested on Python 3.6.9)
   * regex https://pypi.org/project/regex/
   * PyPDF2 https://pypi.org/project/PyPDF2/
+  * PyYAML https://pypi.org/project/PyYAML/
 * LaTeX distribution with pdflatex
   * extsizes https://ctan.org/pkg/extsizes
   * hyperref https://ctan.org/pkg/hyperref
