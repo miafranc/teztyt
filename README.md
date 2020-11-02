@@ -190,7 +190,7 @@ anywhere in the body of the problems as `%figures_dir%`.
 * `evaluation`: Type of evaluation. Three evaluation schemes are defined (two + user-defined):
   * `all`: All-or-nothing scheme: The points are given if and only if all the correct answers are checked.
   * `negative`: Proportional negative marking: incorrect answers are also graded by negative scores. The score is calculated as `((|intersection(C, A)| - |A - C|) / |C|) * p`, where `C` denotes the set of correct answers, `A` is the set of the answers given, and `p` is the points assigned to the problem. Thus, this scheme punishes incorrect answers by subtracting the number of wrong answers from the number of correct answers given. It is proportional, the difference of correct - incorrect answers is divided by the number of correct answers.
-  * `positive`: Error-retaliatory positive marking: the same as the previous scheme, but because of the `max` function, the score will always be positive.
+  * `positive`: Error-retaliatory positive marking: the same as the previous scheme, but because of the `max` function, the score will always be positive. The score is calculated as `max(0, (|intersection(C, A)| - |A - C|) / |C|) * p`.
   * `my`: User-defined evaluation scheme. In this case the evaluation is performed evaluating the Python lambda function given by `evaluation_function` (see below).
 * `evaluation_function`: The lambda evaluation function having the following 4 parameters: `c`, `a`, `r`, `p`:
   * `c`: Set of correct answers.
