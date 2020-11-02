@@ -196,7 +196,7 @@ anywhere in the body of the problems as `%figures_dir%`.
   * `c`: Set of correct answers.
   * `a`: Set of the checked answers.
   * `r`: Set of the remaining (unchecked) answers.
-  * `p`: Points.\ 
+  * `p`: Points.\
 For example, `lambda c, a, r, p: ((len(c.intersection(a)) - len(a.difference(c))) / float(len(c))) * p` is equivalent to the proportional negative marking scheme discussed above.
 
 ## Requirements
