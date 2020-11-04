@@ -13,7 +13,7 @@
         "\\usepackage[utf8]{inputenc}",
         "\\usepackage[truedimen, a4paper, left=12mm, right=12mm, top=5mm, bottom=15mm, centering, ignoreheadfoot]{geometry}",
         "\\usepackage[center]{crop}",
-        "\\usepackage{../data/def}"
+        "\\usepackage{def}"
 	],
 	"name_and_stuff": ["Név", "Csoport"],
 	"name_and_stuff_widths": ["7cm", "3cm"],
@@ -26,7 +26,7 @@
 	"max_pages": 1,
 	"same_page_number": false,
 	"max_attempts": 10,
-	"figures_dir": "/home/miafranc/git/testy/testy/test/data/fig",
+	"figures_dir": "./",
 	"evaluation": "my", 
 	"evaluation_function": "lambda c, a, r, p: max(0, ((len(set(c).intersection(a)) - len(set(a).difference(c))) / float(len(a))) * p) if len(a) > 0 else 0"
 }

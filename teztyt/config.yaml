@@ -19,11 +19,11 @@ fontsize:
 columns: 
   twocolumn
 prologue: |
-      \usepackage[magyar]{babel}
-      \usepackage[utf8]{inputenc}
-      \usepackage[truedimen, a4paper, left=12mm, right=12mm, top=5mm, bottom=15mm, centering, ignoreheadfoot]{geometry}
-      \usepackage[center]{crop}
-      \usepackage{../data/def}
+   \usepackage[magyar]{babel}
+   \usepackage[utf8]{inputenc}
+   \usepackage[truedimen, a4paper, left=12mm, right=12mm, top=5mm, bottom=15mm, centering, ignoreheadfoot]{geometry}
+   \usepackage[center]{crop}
+   \usepackage{def}
 name_and_stuff: 
   ["Név", "Csoport"]
 name_and_stuff_widths: 
@@ -47,7 +47,7 @@ same_page_number:
 max_attempts: 
   10
 figures_dir: 
-  /home/miafranc/git/testy/testy/test/data/fig
+  ./
 evaluation: 
   my 
 evaluation_function: 

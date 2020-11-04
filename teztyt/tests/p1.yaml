@@ -1,0 +1,50 @@
+"1":
+  P: 1
+  Q: Mit jelent az, hogy minimális automata?
+  A:
+    a: Az adott nyelvet minimális számú állapottal felismerő automata.
+    b: Az adott nyelvet minimális számú átmenettel felismerő automata.
+    c: Az automata minimális, ha minimális számú $\varepsilon$-lépést tartalmaz.
+    d: Az adott nyelvet minimális ábécével felismerő automata.
+---	
+"2":
+  P: 1
+  Q: $FIRST_{k}(\alpha)=$
+  A:
+    a: $\{ x \;|\; \alpha \dnyil{*} x\beta, |x|=k \} \cup \{ x \;|\; \alpha \dnyil{*} x, |x|<k \}, x\in T^{*}, \beta\in (N\cup T)^{*}$
+    b: $\{ x \;|\; \alpha \dnyil{*} x\beta, |x|=k \} \cup \{ x \;|\; \alpha \dnyil{*} x, |x|>k \}, x\in T^{*}, \beta\in (N\cup T)^{*}$
+    c: $\{x \;|\; S \dnyil{*} \alpha\beta\gamma, x\in FIRST_{k}(\gamma)\}, x \in T^{*}, \alpha,\beta, \gamma \in(N\cup T)^{*}$
+    d: |
+      $\{ x \;|\; \alpha \dnyil{*} x\beta, |x|=k \} 
+      \cap 
+      \{ x \;|\; \alpha \dnyil{*} x, |x|\geq k \}, x\in T^{*}, \beta\in (N\cup T)^{*}$
+---
+"3":
+  P: 1
+  Q: $FOLLOW_{k}(\beta)=$
+  A:
+    a: |
+      $\{x \;|\; S \dnyil{*} \alpha\beta\gamma, x\in FIRST_{k}(\gamma)\} 
+      \setminus \{\varepsilon\} 
+      \cup \{\#\}, x \in T^{*}, \alpha,\beta, \gamma \in(N\cup T)^{*}$
+    b: $\{x \;|\; S \dnyil{*} \alpha\beta\gamma, x\in FIRST_{k}(\gamma)\}, x \in T^{*}, \alpha,\beta, \gamma \in(N\cup T)^{*}$
+    c: $\{ x \;|\; \alpha \dnyil{*} x\beta, |x|=k \} \cup \{ x \;|\; \alpha \dnyil{*} x, |x|<k \}, x\in T^{*}, \beta\in (N\cup T)^{*}$
+    d: $\{ x \;|\; \alpha \dnyil{*} x\beta, |x|=k \} \cap \{ x \;|\; \alpha \dnyil{*} x, |x|<k \}, x\in T^{*}, \beta\in (N\cup T)^{*}$
+---
+"4":
+  P: 1
+  Q: "$LL(1)$ nyelvtan:"
+  A:
+    a: egy szimbólum előreolvasásával egyértelműen eldönthető, melyik helyettesítési szabályt kell alkalmaznunk a felülről lefelé történő levezetésben.
+    b: egy szimbólum előreolvasásával egyértelműen eldönthető, melyik helyettesítési szabályt kell alkalmaznunk az alulról felfelé történő levezetésben.
+    c: egy szimbólum előreolvasásával egyértelműen eldönthető, hogy legbaloldalibb vagy legjobboldalibb levezetést kell alkalmaznunk.
+    d: egy szimbólum előreolvasásával egyértelműen eldönthető, hogy melyik a legjobb levezetés.
+---
+"5":
+  P: 1
+  Q: "$LR(k)$ grammatika:"
+  A:
+    a: egy szimbólum előreolvasásával egyértelműen eldönthető, hogy a nyél végén vagyunk egy alulról felfelé történő levezetésben.
+    b: egy szimbólum előreolvasásával egyértelműen eldönthető, hogy a nyél végén vagyunk egy felülről lefelé történő levezetésben.
+    c: egy szimbólum előreolvasásával egyértelműen eldönthető, hogy a program végén vagyunk egy alulról felfelé történő levezetésben.
+    d: egy szimbólum előreolvasásával egyértelműen eldönthető, hogy legjobboldalibb vagy legbaloldalibb levezetést kell alkalmaznunk.
