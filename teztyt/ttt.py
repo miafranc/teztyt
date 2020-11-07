@@ -583,6 +583,9 @@ class OneClassMultipleChoiceTest:
     
 
 def main(args):
+    if len(args) == 0:
+        args = ['--help']
+    
     parser = argparse.ArgumentParser()
     
     subparsers = parser.add_subparsers(help='sub-command help')
