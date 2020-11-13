@@ -158,7 +158,7 @@ and of the correct answers, respectively.
 
 The evaluation scheme to be used can be set using the `evaluation` key in the config file. 
 The currently built-in schemes include regular, proportional negative and error-retaliatory positive marking 
-(see the __Config file__ section below). It is also possible to define and use a new scheme setting `"evaluation": "my"`
+(see the [Config file](#config-file) section below). It is also possible to define and use a new scheme setting `"evaluation": "my"`
 and giving the evaluation function as a Python lambda function in `evaluation_function`.
 
 ## Config file
