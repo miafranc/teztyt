@@ -94,10 +94,10 @@ class OneClassMultipleChoiceTest:
         """
         f = codecs.open(yaml_filename, 'w', 'utf-8')
         if dump_all:
-#             yaml.dump_all(data, f, Dumper=Dumper, indent=2, default_flow_style=False)
-            yaml.dump_all(data, f, Dumper=Dumper, indent=2)
+#             yaml.dump_all(data, f, Dumper=Dumper, indent=2, default_flow_style=False, allow_unicode=True)
+            yaml.dump_all(data, f, Dumper=Dumper, indent=2, allow_unicode=True)
         else:
-            yaml.dump(data, f, Dumper=Dumper, indent=2)
+            yaml.dump(data, f, Dumper=Dumper, indent=2, allow_unicode=True)
         f.close()
 
     @staticmethod
@@ -552,8 +552,11 @@ class OneClassMultipleChoiceTest:
         """
         # Sometimes it happens that a string becomes a byte string (in case of text fields).
         report = {test_id: {}}
-        for t in text_data.keys():
-            report[test_id]['_' + str(t)] = str(text_data[t])  # prefix '_' added to appear at the beginning in the output
+        tt = {}
+        for i, t in enumerate(text_data.keys()):
+            st = str(t)
+            tt[str(i+1) + '. ' + self.config['name_and_stuff'][int(st[st.rindex(':')+1:])]] = str(text_data[t])
+        report[test_id]['_'] = tt
         report[test_id]['ans'] = {}
         for i in range(len(checked_indices)):
             report[test_id]['ans'][i+1] = [checked_indices[i], correct_indices[i]]

@@ -143,21 +143,21 @@ Evaluation of the solved tests can be done using the `eval` sub-command.
 The format of the YAML output file produced is the following:
 ```
 test_id:
-  text_field_1: value_1
-  text_field_2: value_2
-  ...
+  _: {text_field_1: value_1, text_field_2: value_2, ...}
   ans:
     problem_index:
     - [answers]
     - [correct_answers]
     ...
+  points: p
+---
 ...
 ```
 where `answers` and `correct_answers` are lists containing the indices of the checked answers
 and of the correct answers, respectively.
 
 The evaluation scheme to be used can be set using the `evaluation` key in the config file. 
-The currently built-in schemes include all-or-nothing and proportional negative marking 
+The currently built-in schemes include regular, proportional negative and error-retaliatory positive marking 
 (see the __Config file__ section below). It is also possible to define and use a new scheme setting `"evaluation": "my"`
 and giving the evaluation function as a Python lambda function in `evaluation_function`.
 
