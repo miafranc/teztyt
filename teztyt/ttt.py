@@ -37,6 +37,7 @@ class OneClassMultipleChoiceTest:
             self.config_type = 'json'
         self.config = self._load_yaml(config_file)  # can handle json too
         self.data = []
+        self.filenames = []
         
         self.solutions = {}
         
@@ -126,7 +127,9 @@ class OneClassMultipleChoiceTest:
         containing all the problems, while in YAML each document (dictionary) represent one document.)
         """
         self.data = []
+        self.filenames = []
         for f in filenames:
+            self.filenames.append(f)
             if f.endswith('.json'):  # JSON
                 self.data.append(self._load_json(f))
             elif f.endswith('.yaml'):  # YAML
@@ -355,7 +358,7 @@ class OneClassMultipleChoiceTest:
             if regex.match(self.config['correct_key_match'], a):
                 corr_ans.append(ind + 1)
         
-        return {problem_num: [[i+1, k, points], corr_ans]}
+        return {problem_num: [[self.filenames[i], k, points], corr_ans]}
     
     def _shuffle_answers(self, problem):
         """Shuffles the answers of a given problem.
@@ -588,7 +591,7 @@ class OneClassMultipleChoiceTest:
 def main(args):
     if len(args) == 0:
         args = ['--help']
-    
+
     parser = argparse.ArgumentParser()
     
     subparsers = parser.add_subparsers(help='sub-command help')

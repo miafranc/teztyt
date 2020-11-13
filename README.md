@@ -135,7 +135,7 @@ The solutions are output in YAML format as follows:
 ```
 test_id:
   problem_index:
-  - [input_file_index, problem_key, points]
+  - [input_file_name, problem_key, points]
   - [indices_of_correct_answers]
 ...
 ```
