@@ -182,7 +182,7 @@ and giving the evaluation function as a Python lambda function in `evaluation_fu
 * `pdflatex`: Name of `pdflatex` executable (usually `"pdflatex"`).
 * `latex_parameters`: If additional parameters are needed; we use `"-interaction=batchmode"` to suppress messages (not the best solution though).
 * `max_pages`: Maximum number of pages a test can occupy.
-* `same_page_number`: Whether each test should have the same number of pages; `true` or `false`.
+* `same_page_number`: Whether each test should have the same number of pages; `true` or `false`. If it is set to true, all tests will have `max_pages` number of pages.
 * `max_attempts`: Maximum number of attempts for generating a test (it might happen that a test cannot be generated
 because of the maximum number of pages constraint).
 * `figures_dir`: Folder of the external data used in the problems (e.g. images, tikz, etc.). The path can be used

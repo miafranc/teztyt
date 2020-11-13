@@ -46,9 +46,10 @@ same_page_number:
   false
 max_attempts: 
   10
-figures_dir: 
+figures_dir: # use %figures_dir% in LaTeX code
   ./
 evaluation: 
-  my 
+  regular
+  # my 
 evaluation_function: 
-  lambda c, a, r, p: max(0, ((len(set(c).intersection(a)) - len(set(a).difference(c))) / float(len(a))) * p) if len(a) > 0 else 0
+  "lambda c, a, r, p: max(0, ((len(set(c).intersection(a)) - len(set(a).difference(c))) / float(len(a))) * p) if len(a) > 0 else 0"
