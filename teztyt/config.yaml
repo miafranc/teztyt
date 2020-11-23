@@ -34,6 +34,8 @@ problem_environment:
   problem
 out_file_prefix: 
   test
+eval_file_prefix: 
+  eval_
 solutions_file: 
   solutions.txt
 pdflatex: 

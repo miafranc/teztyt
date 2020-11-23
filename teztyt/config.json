@@ -20,6 +20,7 @@
 	"newtheorem_string": "feladat",
 	"problem_environment": "problem",
 	"out_file_prefix": "test",
+	"eval_file_prefix": "eval_",
 	"solutions_file": "solutions.txt",
 	"pdflatex": "pdflatex",
 	"latex_parameters": "-interaction=batchmode",

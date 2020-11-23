@@ -12,12 +12,15 @@ import sys
 
 import regex
 from PyPDF2.pdf import PdfFileReader, PdfFileWriter
-from PyPDF2.generic import BooleanObject, NameObject
+from PyPDF2.generic import BooleanObject, NameObject, TextStringObject
+from pdf_annotate import PdfAnnotator, Location, Appearance
 import yaml
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
 except ImportError:
     from yaml import Loader, Dumper
+
+from pprint import pprint
 
 
 class OneClassMultipleChoiceTest:
@@ -278,7 +281,11 @@ class OneClassMultipleChoiceTest:
         
         for ind_a, a in enumerate(answers):
             ans = self.data[i][k]['A'][a].replace('%figures_dir%', self.config['figures_dir'])
-            code += '\\item[\\checkBoxHref{{{}}}] {}'.format('{}:{}:{}:{}:{}'.format(test_id, problem_num, i+1, k, ind_a+1), ans)
+#             cid = format('{}:{}:{}:{}:{}'.format(test_id, problem_num, i+1, k, ind_a+1))
+            cid = format('{}:{}:{}'.format(test_id, problem_num, ind_a+1))
+#             code += f'\\item[\\checkBoxHref{{{id}}}] {ans}'
+#             code += f'\\hypertarget{{ht_{id}}}{{}}'
+            code += f'\\item[\\hypertarget{{ht_{cid}}}{{\\hspace{{10px}}}}\\checkBoxHref{{{cid}}}] {ans}'
             code += ' %\n' if regex.match(self.config['correct_key_match'], a) else '\n'
          
         code += '\\end{itemize}\n'
@@ -486,6 +493,56 @@ class OneClassMultipleChoiceTest:
         self.solutions = sols
         return sols
 
+    @staticmethod
+    def _update_page_form_checkbox_values(page, fields):  
+        """From/inspired by: https://github.com/mstamy2/PyPDF2/issues/355
+        """
+        for j in range(0, len(page['/Annots'])):
+            writer_annot = page['/Annots'][j].getObject()
+            for field in fields:
+                if writer_annot.get('/T') == field:
+                    if fields[field] in ('/1', '/Yes'):
+                        writer_annot.update({
+                            NameObject("/V"): NameObject(fields[field]),
+                            NameObject("/AS"): NameObject(fields[field])
+                        })
+                    else:
+                        writer_annot.update({
+                            NameObject("/V"): TextStringObject(fields[field])
+                        })
+    
+    def draw_rectangles_for_solution(self, f_in, f_out, solution):
+        """
+        """
+        pr = PdfFileReader(f_in)
+        dest = pr.getNamedDestinations()
+        fields = pr.getFields()
+    
+        a = PdfAnnotator(f_in)
+        
+        for p in range(pr.getNumPages()):
+            for dk, dv in dest.items():
+                if pr.getDestinationPageNumber(dv) == p and dk.startswith('ht_'):
+                    inds = [int(ind) for ind in dk[3:].split(':')]
+                    if inds[2] in solution[inds[1]][1]:
+                        # using some hard-coded values: 
+                        a.add_annotation('square', 
+                                         Location(x1=float(dv['/Left']), y1=float(dv['/Top']), x2=float(dv['/Left'])+5, y2=float(dv['/Top'])+5, page=p), 
+                                         Appearance(stroke_color=(0, 1, 0), stroke_width=5),)
+        
+        a.write(f_out)
+        
+        pw = PdfFileWriter()
+        pr = PdfFileReader(f_out, strict=False)
+        pw.appendPagesFromReader(pr)
+        pw._root_object.update({NameObject("/AcroForm"): pr.trailer["/Root"]["/AcroForm"]})
+        pw._root_object["/AcroForm"].update({NameObject("/NeedAppearances"): BooleanObject(True)})
+        for p in range(pr.getNumPages()):
+            self._update_page_form_checkbox_values(pw.getPage(p), {fk:fv['/V'] for fk, fv in fields.items()})
+        f = codecs.open(f_out, 'wb')
+        pw.write(f)
+        f.close()
+
     def evaluate_test(self, fname):
         """Evaluate a test (a PDF file) given a solution file and an evaluation scheme.
         Solutions have to be loaded first.
@@ -567,7 +624,7 @@ class OneClassMultipleChoiceTest:
         
         return report
     
-    def evaluate_tests(self, in_dir, out_file):
+    def evaluate_tests(self, in_dir, out_file, out_answers_dir):
         """Evaluates test PDFs from a given input directory and writes out the evaluation report.
         Solutions have to be loaded first.
         
@@ -582,6 +639,8 @@ class OneClassMultipleChoiceTest:
                 try:
                     (test_id, text_data, points, correct_indices, checked_indices) = self.evaluate_test(fname)
                     reports.append(self.generate_report(test_id, text_data, points, correct_indices, checked_indices))
+                    if out_answers_dir:
+                        self.draw_rectangles_for_solution(fname, join(out_answers_dir, self.config['eval_file_prefix'] + f), self.solutions[test_id])
                 except:
                     print('ERROR ({}): {}'.format(fname, str(sys.exc_info())))  # do not raise exception, just report the error
         
@@ -617,6 +676,7 @@ def main(args):
     parser_eval.add_argument('--solutions', '-s', type=str, required=True, help="Solutions file.")
     parser_eval.add_argument('--dir', '-d', type=str, required=True, help="Input directory.")
     parser_eval.add_argument('--out', '-o', type=str, required=True, help="Output filename.")
+    parser_eval.add_argument('--ans', '-a', type=str, required=False, help="Optional, generate PDFs showing the correct answers.")
     parser_eval.set_defaults(which='eval')
 
     args = parser.parse_args(args)
@@ -636,7 +696,7 @@ def main(args):
                 mct._merge_pdfs(args.out, args.merge)
     elif args.which == 'eval':
         mct.load_solutions(args.solutions)
-        mct.evaluate_tests(args.dir, args.out)
+        mct.evaluate_tests(args.dir, args.out, args.ans)
 
         
 if __name__ == "__main__":
