@@ -281,8 +281,8 @@ class OneClassMultipleChoiceTest:
         
         for ind_a, a in enumerate(answers):
             ans = self.data[i][k]['A'][a].replace('%figures_dir%', self.config['figures_dir'])
-#             cid = format('{}:{}:{}:{}:{}'.format(test_id, problem_num, i+1, k, ind_a+1))
-            cid = format('{}:{}:{}'.format(test_id, problem_num, ind_a+1))
+            cid = format('{}:{}:{}:{}:{}'.format(test_id, problem_num, i+1, k, ind_a+1))
+#             cid = format('{}:{}:{}'.format(test_id, problem_num, ind_a+1))
 #             code += f'\\item[\\checkBoxHref{{{id}}}] {ans}'
 #             code += f'\\hypertarget{{ht_{id}}}{{}}'
             code += f'\\item[\\hypertarget{{ht_{cid}}}{{\\hspace{{10px}}}}\\checkBoxHref{{{cid}}}] {ans}'
@@ -333,7 +333,10 @@ class OneClassMultipleChoiceTest:
             prologue += '\\noindent\\TextField[name={},width={}]{{{}:}}{}\n'.format('t{}:{}'.format(test_id, ind_f), 
                                                                                      self.config['name_and_stuff_widths'][ind_f], 
                                                                                      field,
-                                                                                     '\\\\\\\\' if ind_f < len(self.config['name_and_stuff'])-1 else '')
+#                                                                                      '\\\\\\\\' if ind_f < len(self.config['name_and_stuff'])-1 else '')
+                                                                                     '\\\\\\\\')
+        
+        prologue += '\\noindent\\TextField[name={},width={},readonly=true,backgroundcolor=green,bordercolor=blue]{{}}\n'.format('points', '5em')
         
         return prologue
     
@@ -511,7 +514,7 @@ class OneClassMultipleChoiceTest:
                             NameObject("/V"): TextStringObject(fields[field])
                         })
     
-    def draw_rectangles_for_solution(self, f_in, f_out, solution):
+    def draw_rectangles_for_solution(self, f_in, f_out, solution, points):
         """
         """
         pr = PdfFileReader(f_in)
@@ -524,7 +527,8 @@ class OneClassMultipleChoiceTest:
             for dk, dv in dest.items():
                 if pr.getDestinationPageNumber(dv) == p and dk.startswith('ht_'):
                     inds = [int(ind) for ind in dk[3:].split(':')]
-                    if inds[2] in solution[inds[1]][1]:
+#                     if inds[2] in solution[inds[1]][1]:
+                    if inds[4] in solution[inds[1]][1]:
                         # using some hard-coded values: 
                         a.add_annotation('square', 
                                          Location(x1=float(dv['/Left']), y1=float(dv['/Top']), x2=float(dv['/Left'])+5, y2=float(dv['/Top'])+5, page=p), 
@@ -539,6 +543,7 @@ class OneClassMultipleChoiceTest:
         pw._root_object["/AcroForm"].update({NameObject("/NeedAppearances"): BooleanObject(True)})
         for p in range(pr.getNumPages()):
             self._update_page_form_checkbox_values(pw.getPage(p), {fk:fv['/V'] for fk, fv in fields.items()})
+        self._update_page_form_checkbox_values(pw.getPage(0), {'points': str(points)})
         f = codecs.open(f_out, 'wb')
         pw.write(f)
         f.close()
@@ -560,7 +565,7 @@ class OneClassMultipleChoiceTest:
         fields = self._extract_pdf_forms(fname)
         
         all_keys = list(fields.keys())
-        problem_keys = list(filter(lambda x: x[0] != 't', all_keys))
+        problem_keys = list(filter(lambda x: x[0] != 't' and x[0] != 'p', all_keys))
         text_keys = list(filter(lambda x: x[0] == 't', all_keys))
         test_id = int(problem_keys[0][:problem_keys[0].index(':')])
         
@@ -640,7 +645,7 @@ class OneClassMultipleChoiceTest:
                     (test_id, text_data, points, correct_indices, checked_indices) = self.evaluate_test(fname)
                     reports.append(self.generate_report(test_id, text_data, points, correct_indices, checked_indices))
                     if out_answers_dir:
-                        self.draw_rectangles_for_solution(fname, join(out_answers_dir, self.config['eval_file_prefix'] + f), self.solutions[test_id])
+                        self.draw_rectangles_for_solution(fname, join(out_answers_dir, self.config['eval_file_prefix'] + f), self.solutions[test_id], points)
                 except:
                     print('ERROR ({}): {}'.format(fname, str(sys.exc_info())))  # do not raise exception, just report the error
         
