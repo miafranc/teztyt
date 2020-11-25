@@ -65,7 +65,7 @@ optional arguments:
 
 
 usage: ttt.py eval [-h] --config CONFIG --solutions SOLUTIONS --dir DIR --out
-                   OUT
+                   OUT [--ans ANS]
 
 optional arguments:
   -h, --help            show this help message and exit
