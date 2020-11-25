@@ -498,7 +498,14 @@ class OneClassMultipleChoiceTest:
 
     @staticmethod
     def _update_page_form_checkbox_values(page, fields):  
-        """From/inspired by: https://github.com/mstamy2/PyPDF2/issues/355
+        """Updates the checkbox values in a form. 
+        It is needed in order the checked answers to become visible.
+        
+        Parameters:
+            page (PyPDF2.pdf.PageObject): Page object from a PDF file.
+            fields (dict): Dictionary containing the key -> value assignments.
+        
+        (From/inspired by: https://github.com/mstamy2/PyPDF2/issues/355)
         """
         for j in range(0, len(page['/Annots'])):
             writer_annot = page['/Annots'][j].getObject()
@@ -515,7 +522,15 @@ class OneClassMultipleChoiceTest:
                         })
     
     def draw_rectangles_for_solution(self, f_in, f_out, solution, points):
-        """
+        """Drawing green filled rectangles near the correct answers for every problem,
+        in order to indicate the correct solution.
+        It calculates and writes the total score achieved too.
+        
+        Parameters:
+            f_in (str): Path to the input PDF file.
+            f_out (str): Path to the output PDF file.
+            solution (dict): The solution (correct answers) corresponding to the input PDF file (f_in).
+            points (float): Total points achieved.
         """
         pr = PdfFileReader(f_in)
         dest = pr.getNamedDestinations()
@@ -681,7 +696,8 @@ def main(args):
     parser_eval.add_argument('--solutions', '-s', type=str, required=True, help="Solutions file.")
     parser_eval.add_argument('--dir', '-d', type=str, required=True, help="Input directory.")
     parser_eval.add_argument('--out', '-o', type=str, required=True, help="Output filename.")
-    parser_eval.add_argument('--ans', '-a', type=str, required=False, help="Optional, generate PDFs showing the correct answers.")
+    parser_eval.add_argument('--ans', '-a', type=str, required=False, help="""Optional, generate PDFs showing the correct answers
+                                                                              in the given directory.""")
     parser_eval.set_defaults(which='eval')
 
     args = parser.parse_args(args)

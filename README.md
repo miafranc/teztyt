@@ -75,6 +75,8 @@ optional arguments:
                         Solutions file.
   --dir DIR, -d DIR     Input directory.
   --out OUT, -o OUT     Output filename.
+  --ans ANS, -a ANS     Optional, generate PDFs showing the correct answers in
+                        the given directory.
 ```
 
 ## JSON and YAML data file formats
@@ -155,6 +157,9 @@ test_id:
 ```
 where `answers` and `correct_answers` are lists containing the indices of the checked answers
 and of the correct answers, respectively.
+Using the `-a` option one can generate PDFs showing the correct answers in a given folder.
+That is, for a completed form it is possible to generate a new PDF, in which both the selected and
+the correct answers are shown, and the total score achieved is calculated as well.
 
 The evaluation scheme to be used can be set using the `evaluation` key in the config file. 
 The currently built-in schemes include regular, proportional negative and error-retaliatory positive marking 
