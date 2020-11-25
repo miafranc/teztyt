@@ -210,6 +210,7 @@ For example, `lambda c, a, r, p: ((len(c.intersection(a)) - len(a.difference(c))
   * regex https://pypi.org/project/regex/
   * PyPDF2 https://pypi.org/project/PyPDF2/
   * PyYAML https://pypi.org/project/PyYAML/
+  * pdf-annotate https://pypi.org/project/pdf-annotate/
 * LaTeX distribution with pdflatex
   * extsizes https://ctan.org/pkg/extsizes
   * hyperref https://ctan.org/pkg/hyperref
