@@ -145,7 +145,7 @@ Evaluation of the solved tests can be done using the `eval` sub-command.
 The format of the YAML output file produced is the following:
 ```
 test_id:
-  _: {text_field_1: value_1, text_field_2: value_2, ...}
+  id: {text_field_1: value_1, text_field_2: value_2, ...}
   ans:
     problem_index:
     - [answers]
