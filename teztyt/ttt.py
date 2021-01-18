@@ -44,8 +44,8 @@ class OneClassMultipleChoiceTest:
         
         self.solutions = {}
         
-        self.YES = '/Yes'
-        self.NO = '/Off'
+        self.YES = ['/Yes', '/N', '/1']
+        self.NO = ['/Off']
         
     @staticmethod
     def _check_duplicate_keys(fname, ordered_pairs):
@@ -287,7 +287,7 @@ class OneClassMultipleChoiceTest:
 #             code += f'\\hypertarget{{ht_{id}}}{{}}'
             code += f'\\item[\\hypertarget{{ht_{cid}}}{{\\hspace{{10px}}}}\\checkBoxHref{{{cid}}}] {ans}'
             code += ' %\n' if regex.match(self.config['correct_key_match'], a) else '\n'
-         
+        
         code += '\\end{itemize}\n'
         code += '\\end{{{}}}\n'.format(self.config['problem_environment'])
         
@@ -496,8 +496,7 @@ class OneClassMultipleChoiceTest:
         self.solutions = sols
         return sols
 
-    @staticmethod
-    def _update_page_form_checkbox_values(page, fields):  
+    def _update_page_form_checkbox_values(self, page, fields):  
         """Updates the checkbox values in a form. 
         It is needed in order the checked answers to become visible.
         
@@ -511,7 +510,7 @@ class OneClassMultipleChoiceTest:
             writer_annot = page['/Annots'][j].getObject()
             for field in fields:
                 if writer_annot.get('/T') == field:
-                    if fields[field] in ('/1', '/Yes'):
+                    if fields[field] in self.YES:
                         writer_annot.update({
                             NameObject("/V"): NameObject(fields[field]),
                             NameObject("/AS"): NameObject(fields[field])
@@ -557,7 +556,7 @@ class OneClassMultipleChoiceTest:
         pw._root_object.update({NameObject("/AcroForm"): pr.trailer["/Root"]["/AcroForm"]})
         pw._root_object["/AcroForm"].update({NameObject("/NeedAppearances"): BooleanObject(True)})
         for p in range(pr.getNumPages()):
-            self._update_page_form_checkbox_values(pw.getPage(p), {fk:fv['/V'] for fk, fv in fields.items()})
+            self._update_page_form_checkbox_values(pw.getPage(p), {fk:fv['/V'] for fk, fv in fields.items() if '/V' in fv.keys()})  # sometimes '/V' disappears from the keys
         self._update_page_form_checkbox_values(pw.getPage(0), {'points': str(points)})
         f = codecs.open(f_out, 'wb')
         pw.write(f)
@@ -607,16 +606,16 @@ class OneClassMultipleChoiceTest:
             # (This is why '/V' is checked if it exists.)
             checked_answers = [int(x[str.rindex(x, ':') + 1:]) for x in filter(lambda x: x.startswith('{}:{}'.format(test_id, problem_id)) 
                                                                           and fields[x].get('/V', -1) != -1 
-                                                                          and fields[x]['/V'] == self.YES, problem_keys)]
+                                                                          and fields[x]['/V'] in self.YES, problem_keys)]
             rest_answers = [int(x[str.rindex(x, ':') + 1:]) for x in filter(lambda x: x.startswith('{}:{}'.format(test_id, problem_id)) 
-                                                                       and (fields[x].get('/V', -1) == -1 or fields[x]['/V'] == self.NO), problem_keys)]
+                                                                       and (fields[x].get('/V', -1) == -1 or fields[x]['/V'] in self.NO), problem_keys)]
             correct_indices.append(correct_answers)
             checked_indices.append(checked_answers)
             points += schema(set(correct_answers), set(checked_answers), set(rest_answers), float(problem_solution[problem_id][0][2]))
     
         return (test_id, {x:fields[x]['/V'] for x in text_keys}, points, correct_indices, checked_indices)
     
-    def generate_report(self, test_id, text_data, points, correct_indices, checked_indices):
+    def generate_report(self, test_id, fname, text_data, points, correct_indices, checked_indices):
         """Generating evaluation reports. 
         Its parameters are exactly the ones returned by `evaluate_test`. 
         
@@ -636,7 +635,8 @@ class OneClassMultipleChoiceTest:
         for i, t in enumerate(text_data.keys()):
             st = str(t)
             tt[str(i+1) + '. ' + self.config['name_and_stuff'][int(st[st.rindex(':')+1:])]] = str(text_data[t])
-        report[test_id]['_'] = tt
+        report[test_id]['id'] = tt
+        report[test_id]['filename'] = fname
         report[test_id]['ans'] = {}
         for i in range(len(checked_indices)):
             report[test_id]['ans'][i+1] = [checked_indices[i], correct_indices[i]]
@@ -658,7 +658,7 @@ class OneClassMultipleChoiceTest:
             if isfile(fname) and regex.match('^.*\.pdf$', f, flags=regex.IGNORECASE):
                 try:
                     (test_id, text_data, points, correct_indices, checked_indices) = self.evaluate_test(fname)
-                    reports.append(self.generate_report(test_id, text_data, points, correct_indices, checked_indices))
+                    reports.append(self.generate_report(test_id, fname, text_data, points, correct_indices, checked_indices))
                     if out_answers_dir:
                         self.draw_rectangles_for_solution(fname, join(out_answers_dir, self.config['eval_file_prefix'] + f), self.solutions[test_id], points)
                 except:
