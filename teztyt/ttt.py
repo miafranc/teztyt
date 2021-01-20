@@ -604,10 +604,10 @@ class OneClassMultipleChoiceTest:
             correct_answers = problem_solution[problem_id][1]
             # In some cases (e.g. using Acrobat Reader in Windows, version 2019.012.20040) it happens, that the '/V' fields becomes missing if a checkbox is not checked.
             # (This is why '/V' is checked if it exists.)
-            checked_answers = [int(x[str.rindex(x, ':') + 1:]) for x in filter(lambda x: x.startswith('{}:{}'.format(test_id, problem_id)) 
+            checked_answers = [int(x[str.rindex(x, ':') + 1:]) for x in filter(lambda x: x.startswith('{}:{}:'.format(test_id, problem_id)) 
                                                                           and fields[x].get('/V', -1) != -1 
                                                                           and fields[x]['/V'] in self.YES, problem_keys)]
-            rest_answers = [int(x[str.rindex(x, ':') + 1:]) for x in filter(lambda x: x.startswith('{}:{}'.format(test_id, problem_id)) 
+            rest_answers = [int(x[str.rindex(x, ':') + 1:]) for x in filter(lambda x: x.startswith('{}:{}:'.format(test_id, problem_id)) 
                                                                        and (fields[x].get('/V', -1) == -1 or fields[x]['/V'] in self.NO), problem_keys)]
             correct_indices.append(correct_answers)
             checked_indices.append(checked_answers)
