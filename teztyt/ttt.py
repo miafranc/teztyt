@@ -519,7 +519,7 @@ class OneClassMultipleChoiceTest:
                         writer_annot.update({
                             NameObject("/V"): TextStringObject(fields[field])
                         })
-    
+        
     def draw_rectangles_for_solution(self, f_in, f_out, solution, points):
         """Drawing green filled rectangles near the correct answers for every problem,
         in order to indicate the correct solution.
@@ -534,9 +534,35 @@ class OneClassMultipleChoiceTest:
         pr = PdfFileReader(f_in)
         dest = pr.getNamedDestinations()
         fields = pr.getFields()
-    
-        a = PdfAnnotator(f_in)
+
+# """IT IS NOT WORKING IF THIS COMES FIRST:"""
+#         a = PdfAnnotator(f_in)
+#         for p in range(pr.getNumPages()):
+#             for dk, dv in dest.items():
+#                 if pr.getDestinationPageNumber(dv) == p and dk.startswith('ht_'):
+#                     inds = [int(ind) for ind in dk[3:].split(':')]
+# #                     if inds[2] in solution[inds[1]][1]:
+#                     if inds[4] in solution[inds[1]][1]:
+#                         # using some hard-coded values: 
+#                         a.add_annotation('square', 
+#                                          Location(x1=float(dv['/Left']), y1=float(dv['/Top']), x2=float(dv['/Left'])+5, y2=float(dv['/Top'])+5, page=p), 
+#                                          Appearance(stroke_color=(0, 1, 0), stroke_width=5),)
+#         a.write(f_out)
         
+        pw = PdfFileWriter()
+#         pr = PdfFileReader(f_out, strict=False)
+        pr = PdfFileReader(f_in, strict=False)
+        pw.appendPagesFromReader(pr)
+        pw._root_object.update({NameObject("/AcroForm"): pr.trailer["/Root"]["/AcroForm"]})
+        pw._root_object["/AcroForm"].update({NameObject("/NeedAppearances"): BooleanObject(True)})
+        for p in range(pr.getNumPages()):
+            self._update_page_form_checkbox_values(pw.getPage(p), {fk:fv['/V'] for fk, fv in fields.items() if '/V' in fv.keys()})  # sometimes '/V' disappears from the keys
+        self._update_page_form_checkbox_values(pw.getPage(0), {'points': str(points)})
+        f = codecs.open(f_out, 'wb')
+        pw.write(f)
+        f.close()
+
+        a = PdfAnnotator(f_out)
         for p in range(pr.getNumPages()):
             for dk, dv in dest.items():
                 if pr.getDestinationPageNumber(dv) == p and dk.startswith('ht_'):
@@ -547,20 +573,8 @@ class OneClassMultipleChoiceTest:
                         a.add_annotation('square', 
                                          Location(x1=float(dv['/Left']), y1=float(dv['/Top']), x2=float(dv['/Left'])+5, y2=float(dv['/Top'])+5, page=p), 
                                          Appearance(stroke_color=(0, 1, 0), stroke_width=5),)
-        
         a.write(f_out)
-        
-        pw = PdfFileWriter()
-        pr = PdfFileReader(f_out, strict=False)
-        pw.appendPagesFromReader(pr)
-        pw._root_object.update({NameObject("/AcroForm"): pr.trailer["/Root"]["/AcroForm"]})
-        pw._root_object["/AcroForm"].update({NameObject("/NeedAppearances"): BooleanObject(True)})
-        for p in range(pr.getNumPages()):
-            self._update_page_form_checkbox_values(pw.getPage(p), {fk:fv['/V'] for fk, fv in fields.items() if '/V' in fv.keys()})  # sometimes '/V' disappears from the keys
-        self._update_page_form_checkbox_values(pw.getPage(0), {'points': str(points)})
-        f = codecs.open(f_out, 'wb')
-        pw.write(f)
-        f.close()
+
 
     def evaluate_test(self, fname):
         """Evaluate a test (a PDF file) given a solution file and an evaluation scheme.
