@@ -1,4 +1,4 @@
 regex==2019.8.19
 PyPDF2==1.26.0
 pdf_annotate==0.11.0
-PyYAML==5.3.1
+PyYAML==5.4
